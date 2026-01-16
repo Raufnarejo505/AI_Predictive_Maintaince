@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    * {
+        @apply border-slate-700;
+    }
+    
+    body {
+        @apply bg-[#010313] text-slate-100 antialiased;
+    }
+}
+
+@layer utilities {
+    .custom-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .custom-scroll::-webkit-scrollbar-track {
+        @apply bg-slate-900/50 rounded;
+    }
+    
+    .custom-scroll::-webkit-scrollbar-thumb {
+        @apply bg-slate-600/50 rounded hover:bg-slate-600/70;
+    }
+}
+
+/* Smooth transitions */
+* {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+/* Focus styles */
+input:focus,
+select:focus,
+button:focus {
+    outline: none;
+}
+
+/* Loading animation */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
