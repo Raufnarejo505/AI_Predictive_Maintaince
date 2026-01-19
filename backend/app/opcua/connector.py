@@ -10,7 +10,8 @@ from app.core.config import Settings, get_settings
 from app.db.session import AsyncSessionLocal
 from app.opcua.schema_normalizer import normalize_opcua_sample
 from app.opcua.source_registry import OPCUASourceConfig, registry
-from app.services import sensor_data_service, sensor_service, machine_service, alarm_service
+from app.services import sensor_data_service, sensor_service, machine_service
+from app.services.incident_manager import incident_manager
 
 try:
     # asyncua is a popular async OPC UA client library
@@ -256,6 +257,24 @@ class OPCUAConnector:
             sensor_data_record = await sensor_data_service.ingest_sensor_data(session, data_in)
             await session.commit()
 
+            # Observe simulation profile changes (controls alarms/tickets via incident_manager).
+            # If this sample is a profile signal, do not treat it as a normal sensor reading for AI.
+            try:
+                alias_lower = (alias or "").lower()
+                is_profile_signal = "simulationprofile" in alias_lower or alias_lower in {"profile", "simulation_profile"}
+                if is_profile_signal:
+                    profile = int(value)
+                    await incident_manager.observe_profile(
+                        session,
+                        machine_id=machine.id,
+                        profile=profile,
+                        observed_at=data_in.timestamp,
+                    )
+                    await session.commit()
+                    return
+            except Exception as exc:
+                logger.debug("OPC UA incident observation failed: {}", exc)
+
             # Broadcast real-time update
             try:
                 from app.api.routers.realtime import broadcast_update
@@ -331,11 +350,11 @@ class OPCUAConnector:
                             
                             if response.status_code == 200:
                                 prediction_result = response.json()
-                                
+
                                 # 5. Store Prediction
                                 from app.services import prediction_service
                                 from app.schemas.prediction import PredictionCreate
-                                
+
                                 pred_create = PredictionCreate(
                                     machine_id=machine.id,
                                     sensor_id=sensor.id,
@@ -353,16 +372,22 @@ class OPCUAConnector:
                                         **prediction_result,
                                         "inference_latency_ms": inference_latency_ms,
                                         "source": "opcua",
-                                    }
+                                    },
                                 )
                                 prediction = await prediction_service.create_prediction(session, pred_create)
                                 await session.commit()
-                                logger.info("✅ AI Prediction created: machine={}, sensor={}, status={}, score={:.3f}", 
-                                          machine.name, alias, prediction.status, prediction.score)
+                                logger.info(
+                                    "✅ AI Prediction created: machine={}, sensor={}, status={}, score={:.3f}",
+                                    machine.name,
+                                    alias,
+                                    prediction.status,
+                                    prediction.score,
+                                )
 
                                 # Broadcast WebSocket update for new prediction
                                 try:
                                     from app.api.routers.realtime import broadcast_update
+
                                     await broadcast_update(
                                         "prediction.created",
                                         {
@@ -372,7 +397,7 @@ class OPCUAConnector:
                                             "status": prediction.status,
                                             "confidence": float(prediction.confidence) if prediction.confidence else None,
                                             "timestamp": prediction.timestamp.isoformat(),
-                                        }
+                                        },
                                     )
                                 except Exception as e:
                                     logger.debug(f"Failed to broadcast prediction update: {e}")
@@ -382,82 +407,23 @@ class OPCUAConnector:
                                 confidence = float(prediction_result.get("confidence", 0.0))
                                 prediction_str = prediction_result.get("prediction", "normal").lower()
                                 score = float(prediction_result.get("score", 0.0))
-                                
-                                # Send email for critical/warning predictions
+
                                 if prediction_status in ["warning", "critical"] or prediction_str == "anomaly" or score > 0.7:
                                     try:
                                         from app.services import notification_service
+
                                         await notification_service.send_prediction_alert_email(
                                             machine_id=str(machine.id),
                                             sensor_id=str(sensor.id),
                                             prediction_status=prediction_status,
                                             score=score,
-                                            confidence=confidence
+                                            confidence=confidence,
                                         )
                                     except Exception as e:
                                         logger.warning(f"Failed to send prediction alert email: {e}")
-                                
-                                # 7. Create Alarm if anomaly detected
-                                if prediction_status in ["warning", "critical"] or prediction_str == "anomaly":
-                                    severity = "critical" if prediction_status == "critical" else "warning"
-                                    anomaly_type = prediction_result.get("anomaly_type", "unknown")
-                                    message = f"AI prediction: {anomaly_type} detected (confidence: {confidence:.2f})"
-                                    
-                                    from app.schemas.alarm import AlarmCreate
-                                    alarm_payload = AlarmCreate(
-                                        machine_id=machine.id,
-                                        sensor_id=sensor.id,
-                                        prediction_id=prediction.id,
-                                        severity=severity,
-                                        message=message,
-                                        triggered_at=timestamp,
-                                        metadata={
-                                            **prediction_result,
-                                            "prediction_id": str(prediction.id),
-                                            "source": "opcua",
-                                        }
-                                    )
-                                    alarm = await alarm_service.create_alarm(session, alarm_payload)
-                                    await session.commit()
-                                    logger.warning("🚨 Alarm created: machine={}, sensor={}, severity={}", 
-                                                 machine.name, alias, severity)
-                                    
-                                    # Create ticket for alarm
-                                    try:
-                                        from app.services import ticket_service
-                                        await ticket_service.ensure_ticket_for_alarm(session, alarm)
-                                        await session.commit()
-                                        logger.info("✅ Ticket created for alarm: id={}, machine={}, sensor={}, severity={}", 
-                                                  alarm.id, machine.name, alias, severity)
-                                    except Exception as e:
-                                        logger.error(f"Failed to create ticket for alarm {alarm.id}: {e}", exc_info=True)
-                                    
-                                    # Send notification
-                                    try:
-                                        from app.services import notification_service
-                                        notification_service.enqueue_alarm_notification(alarm, sensor)
-                                    except Exception as e:
-                                        logger.warning(f"Failed to enqueue alarm notification: {e}")
-                                    
-                                    # Trigger webhooks for critical alarms
-                                    if severity == "critical":
-                                        try:
-                                            from app.services import webhook_service
-                                            webhooks = await webhook_service.get_webhooks(session, is_active=True)
-                                            for webhook in webhooks:
-                                                await webhook_service.trigger_webhook(
-                                                    webhook,
-                                                    "alarm.created",
-                                                    {
-                                                        "alarm_id": str(alarm.id),
-                                                        "machine_id": str(machine.id),
-                                                        "severity": severity,
-                                                        "message": message,
-                                                        "timestamp": timestamp.isoformat(),
-                                                    }
-                                                )
-                                        except Exception as e:
-                                            logger.warning(f"Failed to trigger webhook: {e}")
+
+                                # NOTE: Alarm/ticket generation intentionally NOT performed here.
+                                # It must be controlled by incident_manager to prevent flooding.
                             else:
                                 logger.warning(f"AI service returned status {response.status_code}: {response.text}")
                     except httpx.TimeoutException:
@@ -469,21 +435,5 @@ class OPCUAConnector:
             except Exception as e:
                 logger.error(f"Failed to get AI prediction: {e}", exc_info=True)
 
-            # Fallback to rule-based alarm if AI fails or as secondary check
-            try:
-                await alarm_service.auto_alarm_from_sensor_value(
-                    session=session,
-                    sensor=sensor,
-                    machine_id=machine.id,
-                    value=data_in.value,
-                    timestamp=data_in.timestamp,
-                )
-                await session.commit()
-            except Exception as exc:
-                logger.debug("OPC UA alarm evaluation failed: {}", exc)
-
 
 opcua_connector = OPCUAConnector(get_settings())
-
-
-

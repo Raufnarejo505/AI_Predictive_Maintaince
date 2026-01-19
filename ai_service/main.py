@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Deque, Dict, List, Optional
+from typing import Any, Deque, Dict, List, Optional
 
 import joblib
 import numpy as np
@@ -20,6 +20,16 @@ MODEL_DIR = Path(__file__).resolve().parent / "models"
 WINDOW_SIZE = 60
 MIN_SAMPLES = 12
 BUFFER_CLEANUP_MINUTES = 120  # Clean buffers older than 2 hours
+
+# Industrial stability controls (reduce flapping)
+EMA_ALPHA = 0.2  # smoothing factor for anomaly score
+MIN_STATUS_DWELL_SECONDS = 30  # minimum time to keep a status before downgrading
+HYSTERESIS = {
+    "warning_enter": 0.75,
+    "warning_exit": 0.60,
+    "critical_enter": 0.92,
+    "critical_exit": 0.80,
+}
 
 DEFAULT_THRESHOLDS = {
     "pressure": {"warn": 150.0, "alarm": 180.0},
@@ -201,16 +211,23 @@ class ModelArtifacts:
     scaler: Optional[object] = None
     metadata: Dict[str, str] | None = None
 
+@dataclass
+class SignalState:
+    smoothed_score: float = 0.0
+    status: str = "normal"
+    last_status_change: float = 0.0
+
 # ==================== PREDICTION ENGINE ====================
 class PredictionEngine:
     def __init__(self):
         self.buffers: Dict[str, Deque[Dict[str, float]]] = defaultdict(lambda: deque(maxlen=WINDOW_SIZE))
+        self._signal_state: Dict[str, SignalState] = {}
         self.engineer = FeatureEngineer()
         self.artifacts = self._load_artifacts()
         self._lock = threading.RLock()  # Thread safety
         self.performance = PerformanceTracker()
         self._last_cleanup = time.time()
-    
+
     @staticmethod
     def _load_artifacts() -> ModelArtifacts:
         if not MODEL_DIR.exists():
@@ -371,18 +388,46 @@ class PredictionEngine:
                 window = list(buffer)
                 model_score = self._model_score(window)
                 rule_score = self._rule_score(payload.readings)
-                score = max(model_score or 0.0, rule_score)
+                raw_score = max(model_score or 0.0, rule_score)
+
+                # Smooth the score (EMA) and apply hysteresis + dwell-time.
+                now_ts = time.time()
+                state = self._signal_state.get(payload.sensor_id)
+                if state is None:
+                    state = SignalState(smoothed_score=raw_score, status="normal", last_status_change=now_ts)
+                    self._signal_state[payload.sensor_id] = state
+                else:
+                    state.smoothed_score = (EMA_ALPHA * raw_score) + ((1 - EMA_ALPHA) * state.smoothed_score)
+
+                score = float(max(0.0, min(1.0, state.smoothed_score)))
                 confidence = self._calculate_confidence(model_score, rule_score, len(window))
 
-                # Determine status
-                if score >= 0.9:
-                    status = "critical"
+                # Status transitions with hysteresis.
+                prev_status = state.status
+
+                if prev_status == "critical":
+                    if score < HYSTERESIS["critical_exit"] and (now_ts - state.last_status_change) >= MIN_STATUS_DWELL_SECONDS:
+                        state.status = "warning" if score >= HYSTERESIS["warning_enter"] else "normal"
+                elif prev_status == "warning":
+                    if score >= HYSTERESIS["critical_enter"]:
+                        state.status = "critical"
+                    elif score < HYSTERESIS["warning_exit"] and (now_ts - state.last_status_change) >= MIN_STATUS_DWELL_SECONDS:
+                        state.status = "normal"
+                else:  # normal
+                    if score >= HYSTERESIS["critical_enter"]:
+                        state.status = "critical"
+                    elif score >= HYSTERESIS["warning_enter"]:
+                        state.status = "warning"
+
+                if state.status != prev_status:
+                    state.last_status_change = now_ts
+
+                status = state.status
+                if status == "critical":
                     anomaly_type = "CRITICAL"
-                elif score >= 0.7:
-                    status = "warning"
+                elif status == "warning":
                     anomaly_type = "WARNING"
                 else:
-                    status = "normal"
                     anomaly_type = "NORMAL"
 
                 response_time_ms = (time.perf_counter() - start_time) * 1000
@@ -394,13 +439,17 @@ class PredictionEngine:
                     confidence=round(confidence, 3),
                     anomaly_type=anomaly_type,
                     model_version=self.artifacts.metadata.get("model_version", "rule-based") if self.artifacts.metadata else "rule-based",
-                    rul=max(0.0, (1 - score) * 100),
+                    # Make RUL less jumpy and more industrial: non-linear, based on smoothed score.
+                    rul=max(0.0, min(100.0, ((1 - score) ** 2) * 100)),
                     response_time_ms=round(response_time_ms, 2),
                     contributing_features={
                         "rule_score": round(rule_score, 4),
                         "model_score": round(model_score, 4) if model_score else 0.0,
                         "window_size": len(window),
-                        "buffer_utilization": round(len(window) / WINDOW_SIZE, 2)
+                        "buffer_utilization": round(len(window) / WINDOW_SIZE, 2),
+                        "raw_score": round(raw_score, 4),
+                        "smoothed_score": round(score, 4),
+                        "state_status": status,
                     },
                 )
 
