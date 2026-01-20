@@ -79,12 +79,12 @@ class ServiceHealthChecker {
             return this.status;
         }
 
-        const apiBase = (window as any).VITE_API_URL || "http://localhost:8000";
+        const apiBase = (window as any).VITE_API_URL || "/api";
 
         // Check backend
         try {
             await $.ajax({
-                url: `${apiBase}/health`,
+                url: `${apiBase}/health/live`,
                 method: "GET",
                 timeout: 3000,
             });
@@ -195,7 +195,7 @@ class OfflineDataManager {
 
 // Main offline-aware API client
 export class OfflineAwareAPI {
-    private static apiBase: string = (window as any).VITE_API_URL || "http://localhost:8000";
+    private static apiBase: string = (window as any).VITE_API_URL || "/api";
 
     static setApiBase(url: string): void {
         this.apiBase = url;
