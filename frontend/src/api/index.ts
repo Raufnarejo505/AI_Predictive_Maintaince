@@ -1,7 +1,8 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-// Use relative path in production (via nginx proxy), or full URL in development
-export const API_BASE_URL = import.meta.env.VITE_API_URL || (typeof window !== "undefined" && window.location.port === "3000" ? "http://localhost:8000" : "/api");
+// Use relative path in production (via nginx proxy). If you want a direct backend URL,
+// set VITE_API_URL explicitly.
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 const ACCESS_TOKEN_KEY = "access_token";
 
 // Token storage - sync between localStorage and in-memory

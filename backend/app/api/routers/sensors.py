@@ -20,7 +20,28 @@ async def list_sensors(
     machine_id: Optional[UUID] = Query(default=None),
     session: AsyncSession = Depends(get_session),
 ):
-    return await sensor_service.list_sensors(session, machine_id)
+    sensors = await sensor_service.list_sensors(session, machine_id)
+
+    # Manually construct response to avoid SQLAlchemy metadata serialization issues.
+    result: List[SensorRead] = []
+    for sensor in sensors:
+        result.append(
+            SensorRead(
+                id=sensor.id,
+                machine_id=sensor.machine_id,
+                name=sensor.name,
+                sensor_type=sensor.sensor_type,
+                unit=sensor.unit,
+                min_threshold=float(sensor.min_threshold) if sensor.min_threshold is not None else None,
+                max_threshold=float(sensor.max_threshold) if sensor.max_threshold is not None else None,
+                warning_threshold=float(sensor.warning_threshold) if sensor.warning_threshold is not None else None,
+                critical_threshold=float(sensor.critical_threshold) if sensor.critical_threshold is not None else None,
+                metadata=sensor.metadata_json,
+                created_at=sensor.created_at,
+                updated_at=sensor.updated_at,
+            )
+        )
+    return result
 
 
 @router.post("", response_model=SensorRead, status_code=status.HTTP_201_CREATED)
