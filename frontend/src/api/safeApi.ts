@@ -1,37 +1,9 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { useBackendStore } from '../store/backendStore';
+import api from './index';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
-
-// Create axios instance
-const axiosInstance: AxiosInstance = axios.create({
-  baseURL: API_URL,
-  timeout: 5000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Request interceptor - add auth token
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Response interceptor - handle errors gracefully
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // Don't throw - let the wrapper handle it
-    return Promise.reject(error);
-  }
-);
+// Reuse the main API client so we benefit from refresh-token flow on 401.
+const axiosInstance: AxiosInstance = api;
 
 // Mock data generators
 const generateMockData = (endpoint: string): any => {

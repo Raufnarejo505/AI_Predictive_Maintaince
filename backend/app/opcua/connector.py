@@ -189,8 +189,9 @@ class OPCUAConnector:
 
         async with AsyncSessionLocal() as session:
             # 1. Ensure machine exists (use tags to build a synthetic machine id)
-            # Default to "OPCUA-Simulation-Machine" for consistency
-            machine_key = source.tags.get("machine") or "OPCUA-Simulation-Machine"
+            # Default to extruder-01 to match the project requirement that OPC UA should
+            # drive a single extruder machine and the AI decision layer should run.
+            machine_key = source.tags.get("machine") or "extruder-01"
             machine = await machine_service.get_machine(session, machine_key)
             if not machine:
                 from app.schemas.machine import MachineCreate
@@ -201,10 +202,24 @@ class OPCUAConnector:
                         name=machine_key,
                         status="online",
                         location=source.tags.get("line", ""),
-                        metadata={"source": "opcua", "source_id": source.id},
+                        metadata={
+                            "source": "opcua",
+                            "source_id": source.id,
+                            "type": source.tags.get("type") or source.tags.get("machine_type") or "extruder",
+                        },
                     ),
                 )
                 await session.commit()
+            else:
+                # Ensure machine is tagged as an extruder so the extruder AI decision layer
+                # can create alarms/tickets. Do not overwrite if already set.
+                md = machine.metadata_json or {}
+                if not isinstance(md, dict):
+                    md = {}
+                if not (md.get("type") or md.get("machine_type")):
+                    md["type"] = source.tags.get("type") or source.tags.get("machine_type") or "extruder"
+                    machine.metadata_json = md
+                    await session.commit()
 
             # 2. Ensure sensor exists
             sensor = await sensor_service.get_sensor(session, alias)
@@ -442,6 +457,8 @@ class OPCUAConnector:
                         canonical_var = "pressure"
                     elif "vibration" in alias_lower or "vib" in alias_lower:
                         canonical_var = "vibration"
+                    elif "wear" in alias_lower:
+                        canonical_var = "wear_index"
 
                     if canonical_var:
                         extruder_ai_service.observe(
