@@ -11,7 +11,7 @@ from app.db.session import AsyncSessionLocal
 from app.opcua.schema_normalizer import normalize_opcua_sample
 from app.opcua.source_registry import OPCUASourceConfig, registry
 from app.services import sensor_data_service, sensor_service, machine_service
-from app.services.incident_manager import incident_manager
+from app.services.extruder_ai_service import extruder_ai_service
 
 try:
     # asyncua is a popular async OPC UA client library
@@ -257,23 +257,12 @@ class OPCUAConnector:
             sensor_data_record = await sensor_data_service.ingest_sensor_data(session, data_in)
             await session.commit()
 
-            # Observe simulation profile changes (controls alarms/tickets via incident_manager).
-            # If this sample is a profile signal, do not treat it as a normal sensor reading for AI.
-            try:
-                alias_lower = (alias or "").lower()
-                is_profile_signal = "simulationprofile" in alias_lower or alias_lower in {"profile", "simulation_profile"}
-                if is_profile_signal:
-                    profile = int(value)
-                    await incident_manager.observe_profile(
-                        session,
-                        machine_id=machine.id,
-                        profile=profile,
-                        observed_at=data_in.timestamp,
-                    )
-                    await session.commit()
-                    return
-            except Exception as exc:
-                logger.debug("OPC UA incident observation failed: {}", exc)
+            # If this sample is a profile signal, store it but do not generate alarms/tickets.
+            # Industrial calmness rule: no alarms/tickets from ingestion metadata.
+            alias_lower = (alias or "").lower()
+            is_profile_signal = "simulationprofile" in alias_lower or alias_lower in {"profile", "simulation_profile"}
+            if is_profile_signal:
+                return
 
             # Broadcast real-time update
             try:
@@ -434,6 +423,43 @@ class OPCUAConnector:
                         logger.error(f"AI service error for machine={machine.id}, sensor={alias}: {e}", exc_info=True)
             except Exception as e:
                 logger.error(f"Failed to get AI prediction: {e}", exc_info=True)
+
+            # ---------------- Extruder AI decision layer (trend-based) ----------------
+            # This MUST be the only source of alarm/ticket creation for industrial calmness.
+            # Ingestion only observes signals and stores data; alarms/tickets are created
+            # only after the AI layer decides a profile transition.
+            try:
+                machine_type = ((machine.metadata_json or {}).get("machine_type") or (machine.metadata_json or {}).get("type") or "").lower()
+                is_extruder = machine_type == "extruder" or "extruder" in (machine.name or "").lower()
+
+                if is_extruder:
+                    canonical_var = None
+                    if "temp" in alias_lower or "temperature" in alias_lower:
+                        canonical_var = "temperature"
+                    elif "motor" in alias_lower and "current" in alias_lower:
+                        canonical_var = "motor_current"
+                    elif "pressure" in alias_lower:
+                        canonical_var = "pressure"
+                    elif "vibration" in alias_lower or "vib" in alias_lower:
+                        canonical_var = "vibration"
+
+                    if canonical_var:
+                        extruder_ai_service.observe(
+                            machine_id=str(machine.id),
+                            var_name=canonical_var,
+                            value=float(data_in.value or 0.0),
+                            timestamp=data_in.timestamp,
+                        )
+                        decision = extruder_ai_service.decide(machine_id=str(machine.id), now=data_in.timestamp)
+                        if decision:
+                            await extruder_ai_service.apply_and_maybe_raise_incident(
+                                session,
+                                machine=machine,
+                                observed_at=data_in.timestamp,
+                                decision=decision,
+                            )
+            except Exception as e:
+                logger.debug(f"Extruder AI decision layer failed (non-blocking): {e}")
 
 
 opcua_connector = OPCUAConnector(get_settings())

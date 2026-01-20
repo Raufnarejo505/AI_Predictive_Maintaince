@@ -107,7 +107,7 @@ services:
     depends_on:
       - mqtt
     environment:
-      OPCUA_ENDPOINT: ${OPCUA_ENDPOINT:-opc.tcp://host.docker.internal:53530/OPCUA/SimulationServer}
+      OPCUA_ENDPOINT: opc.tcp://host.docker.internal:53530/OPCUA/SimulationServer
       MQTT_BROKER: mqtt
       MQTT_PORT: 1883
       MACHINE_ID: ${MACHINE_ID:-extruder-01}

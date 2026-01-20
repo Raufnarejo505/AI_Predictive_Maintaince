@@ -14,6 +14,7 @@ import asyncio
 import json
 import signal
 import sys
+import time
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 import logging
@@ -80,6 +81,10 @@ class OPCUAMQTTGateway:
         
         # State tracking
         self.running = False
+        self._mqtt_connected = False
+        self._publish_task: Optional[asyncio.Task] = None
+        self._last_publish_monotonic: float = 0.0
+        self._min_publish_interval_s: float = max(0.2, self.sampling_interval_ms / 1000.0)  # safety debounce
         self.reconnect_delay = 5
         self.stats = {
             "messages_published": 0,
@@ -101,13 +106,16 @@ class OPCUAMQTTGateway:
     def _on_mqtt_connect(self, client, userdata, flags, rc):
         """Callback when MQTT client connects."""
         if rc == 0:
+            self._mqtt_connected = True
             logger.info(f"✅ Connected to MQTT broker at {self.mqtt_broker}:{self.mqtt_port}")
         else:
+            self._mqtt_connected = False
             logger.error(f"❌ Failed to connect to MQTT broker. Return code: {rc}")
             self.stats["mqtt_errors"] += 1
     
     def _on_mqtt_disconnect(self, client, userdata, rc):
         """Callback when MQTT client disconnects."""
+        self._mqtt_connected = False
         if rc != 0:
             logger.warning(f"⚠️  Unexpected MQTT disconnection. Return code: {rc}")
     
@@ -133,7 +141,7 @@ class OPCUAMQTTGateway:
             # Create subscription with desired sampling interval
             self.subscription = await self.opcua_client.create_subscription(
                 period=self.sampling_interval_ms,
-                handler=self._on_data_change
+                handler=self
             )
             logger.info(f"📡 Created OPC UA subscription (interval: {self.sampling_interval_ms}ms)")
             
@@ -172,6 +180,10 @@ class OPCUAMQTTGateway:
             logger.error(f"❌ Failed to set up OPC UA subscriptions: {e}")
             self.stats["opcua_errors"] += 1
             return False
+
+    def datachange_notification(self, node, val, data):
+        """asyncua subscription callback (required handler API)."""
+        self._on_data_change(node, val, data)
     
     def _on_data_change(self, node, val, data):
         """
@@ -215,18 +227,17 @@ class OPCUAMQTTGateway:
                 
                 # Publish normalized payload when we have all values
                 if self._should_publish():
-                    # Schedule publish in the event loop
-                    # The callback runs in asyncua's event loop context
+                    # Debounce publish scheduling: asyncua may deliver a burst of data changes
+                    # (multiple monitored items / same tick). Only publish once per interval.
                     try:
                         loop = asyncio.get_event_loop()
-                        if loop.is_running():
-                            # Schedule the coroutine
-                            asyncio.ensure_future(self._publish_telemetry())
-                        else:
+                        if not loop.is_running():
                             loop.run_until_complete(self._publish_telemetry())
+                            return
+
+                        if self._publish_task is None or self._publish_task.done():
+                            self._publish_task = asyncio.create_task(self._publish_telemetry())
                     except RuntimeError:
-                        # If no event loop available, create task in main loop
-                        # This should not happen in normal operation
                         logger.warning("⚠️  No event loop available for publishing")
             else:
                 logger.warning(f"⚠️  Received data change from unknown node: {node_id_str}")
@@ -241,10 +252,10 @@ class OPCUAMQTTGateway:
         
         Publishes when:
         - All sensor values are available, OR
-        - Critical values (wearIndex, simulationProfile) change
+        - Critical values (wearIndex) change
         """
         # Check if we have all required values
-        required = ["temperature", "vibration", "pressure", "motorCurrent", "wearIndex", "simulationProfile"]
+        required = ["temperature", "vibration", "pressure", "motorCurrent", "wearIndex"]
         has_all = all(self.sensor_cache.get(k) is not None for k in required)
         
         return has_all
@@ -252,6 +263,10 @@ class OPCUAMQTTGateway:
     async def _publish_telemetry(self):
         """Publish normalized telemetry payload to MQTT."""
         try:
+            now_mono = time.monotonic()
+            if (now_mono - self._last_publish_monotonic) < self._min_publish_interval_s:
+                return
+
             # Build normalized payload
             payload = self._normalize_payload()
             
@@ -273,6 +288,7 @@ class OPCUAMQTTGateway:
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
                 self.stats["messages_published"] += 1
                 self.stats["last_publish_time"] = datetime.now(timezone.utc).isoformat()
+                self._last_publish_monotonic = now_mono
                 logger.info(f"📤 Published to {topic}: profile={payload.get('profile')}, temp={payload.get('temperature')}°C")
             else:
                 logger.error(f"❌ Failed to publish to MQTT. Return code: {result.rc}")
@@ -290,20 +306,36 @@ class OPCUAMQTTGateway:
             Normalized payload dict or None if data is incomplete
         """
         # Check if we have all required values
-        if any(self.sensor_cache.get(k) is None for k in 
-               ["temperature", "vibration", "pressure", "motorCurrent", "wearIndex", "simulationProfile"]):
+        if any(self.sensor_cache.get(k) is None for k in
+               ["temperature", "vibration", "pressure", "motorCurrent", "wearIndex"]):
             return None
-        
+
         return {
             "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "machineId": self.machine_id,
-            "profile": int(self.sensor_cache["simulationProfile"]),
+            "profile": int(self.sensor_cache["simulationProfile"]) if self.sensor_cache.get("simulationProfile") is not None else None,
             "temperature": float(self.sensor_cache["temperature"]),
             "vibration": float(self.sensor_cache["vibration"]),
             "pressure": float(self.sensor_cache["pressure"]),
             "motorCurrent": float(self.sensor_cache["motorCurrent"]),
             "wearIndex": float(self.sensor_cache["wearIndex"])
         }
+    
+    def _opcua_connected(self) -> bool:
+        """Best-effort OPC UA connection check across asyncua versions."""
+        if not self.opcua_client:
+            return False
+
+        checker = getattr(self.opcua_client, "is_connected", None)
+        if callable(checker):
+            try:
+                return bool(checker())
+            except Exception:
+                # If the library check fails unexpectedly, don't crash the gateway loop.
+                return True
+
+        # Fallback: assume connected if we have a client and subscriptions are set up.
+        return True
     
     async def _connect_mqtt(self) -> bool:
         """Connect to MQTT broker."""
@@ -312,7 +344,7 @@ class OPCUAMQTTGateway:
             self.mqtt_client.connect(self.mqtt_broker, self.mqtt_port, keepalive=60)
             self.mqtt_client.loop_start()
             await asyncio.sleep(1)  # Give MQTT time to connect
-            return self.mqtt_client.is_connected()
+            return self._mqtt_connected
         except Exception as e:
             logger.error(f"❌ Failed to connect to MQTT broker: {e}")
             self.stats["mqtt_errors"] += 1
@@ -351,12 +383,12 @@ class OPCUAMQTTGateway:
         try:
             while self.running:
                 # Check OPC UA connection health
-                if not self.opcua_client or not self.opcua_client.is_connected():
+                if not self._opcua_connected():
                     logger.warning("⚠️  OPC UA connection lost. Reconnecting...")
                     await self._reconnect_opcua()
                 
                 # Check MQTT connection health
-                if not self.mqtt_client.is_connected():
+                if not self._mqtt_connected:
                     logger.warning("⚠️  MQTT connection lost. Reconnecting...")
                     await self._connect_mqtt()
                 

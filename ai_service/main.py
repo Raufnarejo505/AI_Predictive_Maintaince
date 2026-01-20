@@ -57,7 +57,7 @@ class PredictResponse(APIModel):
     model_version: str
     rul: Optional[float] = None
     response_time_ms: float
-    contributing_features: Dict[str, float] = Field(default_factory=dict)
+    contributing_features: Dict[str, Any] = Field(default_factory=dict)
 
 class HealthResponse(APIModel):
     status: str

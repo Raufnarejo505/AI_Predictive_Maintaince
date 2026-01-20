@@ -10,7 +10,7 @@ from app.core.config import Settings, get_settings
 from app.db.session import AsyncSessionLocal
 from app.schemas.sensor_data import SensorDataIn
 from app.services import alarm_service, sensor_data_service, sensor_service
-from app.services.incident_manager import incident_manager
+from app.services.extruder_ai_service import extruder_ai_service
 
 
 class MQTTIngestor:
@@ -281,21 +281,31 @@ class MQTTIngestor:
                 if not machine:
                     logger.info(f"Auto-registering new machine: {machine_id}")
                     from app.schemas.machine import MachineCreate
-                    # Create machine with unique name - use machine_id in name
-                    machine_name = f"Machine {machine_id}"
-                    # Get machine name from payload if available
+                    # IMPORTANT:
+                    # `get_machine(session, machine_id)` resolves by UUID OR by machine.name.
+                    # If we don't set machine.name == machine_id here, we'll create a NEW machine
+                    # on every incoming message (because lookup by name will fail).
+                    machine_name = str(machine_id)
+
                     machine_metadata = payload.get("metadata", {})
-                    if isinstance(machine_metadata, dict):
-                        payload_machine_name = machine_metadata.get("machine_name")
-                        if payload_machine_name:
-                            machine_name = payload_machine_name
-                    
+                    if not isinstance(machine_metadata, dict):
+                        machine_metadata = {}
+
                     machine_location = payload.get("location", "")
-                    
+
                     # Create machine - let UUID be auto-generated
                     machine = await machine_service.create_machine(
                         session, 
-                        MachineCreate(name=machine_name, status="online", location=machine_location, metadata={"type": "unknown", "original_id": machine_id})
+                        MachineCreate(
+                            name=machine_name,
+                            status="online",
+                            location=machine_location,
+                            metadata={
+                                "type": machine_metadata.get("type", "unknown"),
+                                "original_id": str(machine_id),
+                                "display_name": machine_metadata.get("machine_name") or machine_metadata.get("display_name"),
+                            },
+                        ),
                     )
                     await session.commit()
                     # Machine is now created and returned - use it directly
@@ -397,6 +407,45 @@ class MQTTIngestor:
                 logger.info("Sensor data ingested: id={}, machine_id={}, sensor_id={}, value={}", 
                           sensor_data_record.id, machine.id, sensor.id, value)
                 await session.commit()
+
+                # ---------------- Extruder AI decision layer (trend-based) ----------------
+                # This MUST be the only source of alarm/ticket creation for industrial calmness.
+                # Ingestion only observes signals and stores data; alarms/tickets are created
+                # only after the AI layer decides a profile transition.
+                try:
+                    machine_type = ((machine.metadata_json or {}).get("machine_type") or (machine.metadata_json or {}).get("type") or "").lower()
+                    is_extruder = machine_type == "extruder" or "extruder" in (machine.name or "").lower()
+ 
+                    if is_extruder:
+                        # Normalize sensor name into canonical variables.
+                        sensor_name = (sensor.name or "").lower()
+                        canonical_var = None
+                        if "temp" in sensor_name or "temperature" in sensor_name:
+                            canonical_var = "temperature"
+                        elif "motor" in sensor_name and "current" in sensor_name:
+                            canonical_var = "motor_current"
+                        elif "pressure" in sensor_name:
+                            canonical_var = "pressure"
+                        elif "vibration" in sensor_name or "vib" in sensor_name:
+                            canonical_var = "vibration"
+ 
+                        if canonical_var:
+                            extruder_ai_service.observe(
+                                machine_id=str(machine.id),
+                                var_name=canonical_var,
+                                value=float(value),
+                                timestamp=timestamp,
+                            )
+                            decision = extruder_ai_service.decide(machine_id=str(machine.id), now=timestamp)
+                            if decision:
+                                await extruder_ai_service.apply_and_maybe_raise_incident(
+                                    session,
+                                    machine=machine,
+                                    observed_at=timestamp,
+                                    decision=decision,
+                                )
+                except Exception as e:
+                    logger.debug(f"Extruder AI decision layer failed (non-blocking): {e}")
 
                 # 4. Call AI Service for Prediction
                 try:
@@ -524,7 +573,7 @@ class MQTTIngestor:
                                         logger.warning(f"Failed to send prediction alert email: {e}")
                                 
                                 # 7. Alarm/ticket generation is controlled by incident_manager
-                                # based on SimulationProfile. Do not create alarms directly from AI responses.
+                                # based on machine-level AI decision layer (extruder_ai_service).
                             else:
                                 logger.warning(f"AI service returned status {response.status_code}: {response.text}")
                     except httpx.TimeoutException:
@@ -536,21 +585,9 @@ class MQTTIngestor:
                 except Exception as e:
                     logger.error(f"Failed to get AI prediction: {e}", exc_info=True)
 
-                # Rule-based alarms are intentionally disabled for calmness.
-                # IncidentManager is the single source of truth for alarms/tickets.
-
-                # Observe profile (defaults to 0 if not supplied)
-                try:
-                    profile = int((payload.get("metadata") or {}).get("profile", 0))
-                except Exception:
-                    profile = 0
-                await incident_manager.observe_profile(
-                    session,
-                    machine_id=machine.id,
-                    profile=profile,
-                    observed_at=sensor_data_in.timestamp,
-                )
-                await session.commit()
+                # NOTE:
+                # We intentionally do NOT generate alarms/tickets from ingestion metadata profiles.
+                # Alarm creation must pass through the AI decision layer only.
 
         except Exception as e:
             logger.error("Error processing MQTT message: {}", str(e), exc_info=True)

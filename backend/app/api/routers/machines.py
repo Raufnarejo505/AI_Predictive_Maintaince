@@ -118,7 +118,7 @@ async def get_machine_summary(
     # Get active alarms
     active_alarms = await session.scalars(
         select(Alarm)
-        .where(and_(Alarm.machine_id == machine_id, Alarm.status == "active"))
+        .where(and_(Alarm.machine_id == machine_id, Alarm.status.in_(["open", "acknowledged"])))
         .order_by(Alarm.created_at.desc())
     )
     
@@ -134,6 +134,7 @@ async def get_machine_summary(
             "name": machine.name,
             "status": machine.status,
             "criticality": machine.criticality,
+            "ai": (machine.metadata_json or {}).get("ai_state") or {},
         },
         "lastReading": {
             "timestamp": last_reading.timestamp.isoformat() if last_reading else None,
