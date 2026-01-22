@@ -225,21 +225,21 @@ async def startup_event():
     # loop.create_task(start_live_data_generator(interval_seconds=5))
     # logger.info("Live data generator started (5s interval)")
     logger.info("Live data generator DISABLED - only OPC UA data will be ingested")
-    logger.info("⏸️  Live data generator DISABLED - only OPC UA data will be ingested")
+    logger.info("Live data generator disabled - only OPC UA data will be ingested")
 
     # DISABLED: Demo machines seeding - removed to focus on OPC UA only
     # Only keep demo users for login access
     try:
         from app.tasks.seed_demo_data import seed_demo_users
 
-        logger.info("👤 Ensuring demo users exist (admin/engineer/viewer)")
+        logger.info("Ensuring demo users exist (admin/engineer/viewer)")
         await seed_demo_users()
-        logger.info("✅ Demo users verified/created")
+        logger.info("Demo users verified/created")
         
         # DISABLED: Demo machines - OPC UA will create machines automatically
-        # logger.info("🏭 Ensuring demo machines exist (Pump-01, Motor-02, Compressor-A, Conveyor-B2)")
+        # logger.info("Ensuring demo machines exist (Pump-01, Motor-02, Compressor-A, Conveyor-B2)")
         # await seed_sample_machines()
-        logger.info("⏸️  Demo machines DISABLED - machines will be created from OPC UA sources only")
+        logger.info("Demo machines disabled - machines will be created from OPC UA sources only")
     except Exception as e:
         # Don't block startup if seeding fails (e.g., schema differences)
         logger.error(f"Failed to ensure demo users: {e}")

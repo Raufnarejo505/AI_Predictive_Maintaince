@@ -255,10 +255,10 @@ async def seed_sample_machines():
 
 async def main():
     """Run all seed functions"""
-    print("🌱 Seeding demo data...")
+    print("Seeding demo data...")
     await seed_demo_users()
     await seed_sample_machines()
-    print("✅ Seeding complete!")
+    print("Seeding complete!")
 
 
 if __name__ == "__main__":

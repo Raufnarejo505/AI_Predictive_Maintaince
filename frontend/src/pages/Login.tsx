@@ -95,19 +95,19 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#010313] via-[#0a0f1e] to-[#010313] flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-white via-[#f7f5ff] to-[#efe9ff] flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 {/* Logo/Title Section */}
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2">
+                    <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-purple-500 mb-2">
                         Predictive Maintenance
                     </h1>
-                    <p className="text-slate-400 text-sm">Operations Command Center</p>
+                    <p className="text-slate-600 text-sm">Operations Command Center</p>
                 </div>
 
                 {/* Login Card */}
-                <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
-                    <h2 className="text-2xl font-semibold text-slate-100 mb-6 text-center">
+                <div className="bg-white/90 backdrop-blur-xl border border-slate-200 rounded-2xl p-8 shadow-xl">
+                    <h2 className="text-2xl font-semibold text-slate-900 mb-6 text-center">
                         Sign In
                     </h2>
 
@@ -126,7 +126,7 @@ export default function Login() {
                     <form onSubmit={handleSubmit} className="space-y-5">
                         {/* Email Field */}
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+                            <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
                                 Email Address
                             </label>
                             <input
@@ -139,10 +139,10 @@ export default function Login() {
                                         setEmailError("Please enter a valid email address");
                                     }
                                 }}
-                                className={`w-full px-4 py-3 bg-slate-800/50 border rounded-xl text-slate-100 placeholder-slate-500 
-                                    focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50
+                                className={`w-full px-4 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 
+                                    focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300
                                     transition-all duration-200
-                                    ${emailError ? "border-rose-500/50 focus:ring-rose-500/50 focus:border-rose-500/50" : "border-slate-700/50"}
+                                    ${emailError ? "border-rose-400 focus:ring-rose-500/20 focus:border-rose-400" : "border-slate-200"}
                                     disabled:opacity-50 disabled:cursor-not-allowed`}
                                 placeholder="admin@example.com"
                                 required
@@ -161,7 +161,7 @@ export default function Login() {
 
                         {/* Password Field */}
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
+                            <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
                                 Password
                             </label>
                             <input
@@ -174,10 +174,10 @@ export default function Login() {
                                         setPasswordError("Password must be at least 3 characters");
                                     }
                                 }}
-                                className={`w-full px-4 py-3 bg-slate-800/50 border rounded-xl text-slate-100 placeholder-slate-500 
-                                    focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50
+                                className={`w-full px-4 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 
+                                    focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300
                                     transition-all duration-200
-                                    ${passwordError ? "border-rose-500/50 focus:ring-rose-500/50 focus:border-rose-500/50" : "border-slate-700/50"}
+                                    ${passwordError ? "border-rose-400 focus:ring-rose-500/20 focus:border-rose-400" : "border-slate-200"}
                                     disabled:opacity-50 disabled:cursor-not-allowed`}
                                 placeholder="Enter your password"
                                 required
@@ -198,8 +198,8 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={isLoading || !!emailError || !!passwordError}
-                            className="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 
-                                text-slate-900 font-semibold rounded-xl shadow-lg shadow-emerald-500/25
+                            className="w-full py-3 px-4 bg-gradient-to-r from-purple-700 to-purple-500 hover:from-purple-600 hover:to-purple-400 
+                                text-white font-semibold rounded-xl shadow-lg shadow-purple-500/20
                                 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]
                                 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
                                 flex items-center justify-center gap-2"
@@ -219,25 +219,25 @@ export default function Login() {
                     </form>
 
                     {/* Demo Credentials + Sign up link */}
-                    <div className="mt-6 pt-6 border-t border-slate-700/50 space-y-3">
-                        <p className="text-xs text-slate-400 text-center">Demo Credentials:</p>
+                    <div className="mt-6 pt-6 border-t border-slate-200 space-y-3">
+                        <p className="text-xs text-slate-500 text-center">Demo Credentials:</p>
                         <div className="flex flex-col gap-1 text-xs">
-                            <div className="flex justify-between items-center p-2 bg-slate-800/30 rounded">
-                                <span className="text-slate-400">Admin:</span>
-                                <span className="text-slate-300 font-mono">admin@example.com / admin123</span>
+                            <div className="flex justify-between items-center p-2 bg-slate-50 rounded border border-slate-200">
+                                <span className="text-slate-500">Admin:</span>
+                                <span className="text-slate-700 font-mono">admin@example.com / admin123</span>
                             </div>
-                            <div className="flex justify-between items-center p-2 bg-slate-800/30 rounded">
-                                <span className="text-slate-400">Engineer:</span>
-                                <span className="text-slate-300 font-mono">engineer@example.com / engineer123</span>
+                            <div className="flex justify-between items-center p-2 bg-slate-50 rounded border border-slate-200">
+                                <span className="text-slate-500">Engineer:</span>
+                                <span className="text-slate-700 font-mono">engineer@example.com / engineer123</span>
                             </div>
-                            <div className="flex justify-between items-center p-2 bg-slate-800/30 rounded">
-                                <span className="text-slate-400">Viewer:</span>
-                                <span className="text-slate-300 font-mono">viewer@example.com / viewer123</span>
+                            <div className="flex justify-between items-center p-2 bg-slate-50 rounded border border-slate-200">
+                                <span className="text-slate-500">Viewer:</span>
+                                <span className="text-slate-700 font-mono">viewer@example.com / viewer123</span>
                             </div>
                         </div>
-                        <p className="text-center text-xs text-slate-400">
+                        <p className="text-center text-xs text-slate-500">
                             Don&apos;t have an account?{" "}
-                            <a href="/register" className="text-emerald-400 hover:text-emerald-300 font-medium">
+                            <a href="/register" className="text-purple-700 hover:text-purple-600 font-medium">
                                 Sign up
                             </a>
                         </p>

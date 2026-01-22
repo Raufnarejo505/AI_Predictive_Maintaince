@@ -30,14 +30,14 @@ export const BackendOnlineBanner: React.FC = () => {
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-200 rounded-full animate-pulse" />
             <span className="text-sm font-medium text-green-50">
-              🟢 Backend Online — Live data streaming
+              Backend Online — Live data streaming
             </span>
           </div>
           <button
             onClick={() => setShow(false)}
             className="text-green-200 hover:text-green-100 text-xs"
           >
-            ✕
+            X
           </button>
         </div>
       </div>

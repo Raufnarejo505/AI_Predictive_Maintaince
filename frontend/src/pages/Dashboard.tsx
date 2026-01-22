@@ -8,7 +8,7 @@ import { LiveDataTable } from '../components/LiveDataTable';
 import { SensorMonitors } from '../components/SensorMonitors';
 import { useOPCUAStatus } from '../hooks/useLiveData';
 
-const gradientClass = "min-h-screen bg-[#0a0e1a] text-slate-100";
+const gradientClass = "min-h-screen bg-[#f7f5ff] text-slate-900";
 const REFRESH_INTERVAL = 3000; // 3 seconds to show OPC UA changes quickly
 const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
 
@@ -195,32 +195,32 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
       <div className="max-w-[1920px] mx-auto px-6 py-6">
         {/* Top Header Section */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
             PREDICTIVE MAINTENANCE Operations Command Center
           </h1>
-          <p className="text-slate-400 text-sm mb-4">
+          <p className="text-slate-600 text-sm mb-4">
             Real-time health, AI anomaly predictions, alarms, and automation from a single cockpit.
           </p>
           
           {/* Status Cards Row */}
           <div className="flex gap-4 mb-4">
-            <div className="bg-green-500/20 border border-green-500/50 rounded-lg px-4 py-2">
-              <span className="text-xs text-green-400 font-medium">AI SERVICE</span>
-              <div className="text-green-400 font-semibold">
+            <div className="bg-white/90 border border-slate-200 rounded-lg px-4 py-2 shadow-sm">
+              <span className="text-xs text-slate-500 font-medium">AI SERVICE</span>
+              <div className="text-slate-900 font-semibold">
                 {isFallback || !aiStatus ? 'Offline' : (aiStatus.status === 'healthy' ? 'Healthy' : 'Degraded')}
               </div>
             </div>
-            <div className="bg-blue-500/20 border border-blue-500/50 rounded-lg px-4 py-2">
-              <span className="text-xs text-blue-400 font-medium">MQTT</span>
-              <div className="text-white font-semibold">
+            <div className="bg-white/90 border border-slate-200 rounded-lg px-4 py-2 shadow-sm">
+              <span className="text-xs text-slate-500 font-medium">MQTT</span>
+              <div className="text-slate-900 font-semibold">
                 {isFallback || !mqttStatus ? 'Offline' : (mqttStatus.connected ? 'Connected' : 'Disconnected')}
               </div>
             </div>
-            <div className="bg-green-500/20 border border-green-500/50 rounded-lg px-4 py-2 flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+            <div className="bg-white/90 border border-slate-200 rounded-lg px-4 py-2 flex items-center gap-2 shadow-sm">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
               <div>
-                <span className="text-xs text-green-400 font-medium">SYSTEM STATUS</span>
-                <div className="text-green-400 font-semibold">All Systems Operational</div>
+                <span className="text-xs text-slate-500 font-medium">SYSTEM STATUS</span>
+                <div className="text-slate-900 font-semibold">All Systems Operational</div>
               </div>
             </div>
           </div>
@@ -228,7 +228,7 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
           {/* Controls Row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 text-sm text-slate-300">
+              <label className="flex items-center gap-2 text-sm text-slate-700">
                 <input
                   type="checkbox"
                   checked={autoRefresh && !isFallback}
@@ -238,7 +238,7 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
                       setAutoRefresh(e.target.checked);
                     }
                   }}
-                  className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-4 h-4 rounded border-slate-300 bg-white text-purple-600 focus:ring-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <span>
                   Auto-refresh (3s) {isFallback && <span className="text-xs text-slate-500">(Disabled - Offline)</span>}
@@ -250,17 +250,17 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
                 type="button"
                 onClick={handleSystemReset}
                 disabled={isResetting || isFallback || backendStatus !== 'online'}
-                className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-600/70 hover:bg-red-600 text-white border border-red-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-600 hover:bg-red-700 text-white border border-red-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isResetting ? 'Resetting…' : 'System Reset'}
               </button>
-              <div className="text-sm text-slate-400">
+              <div className="text-sm text-slate-500">
                 Last updated: {lastUpdatedStr}
               </div>
             </div>
           </div>
           {resetMessage && (
-            <div className="mt-3 text-sm text-slate-200 bg-slate-900/60 border border-slate-700/50 rounded-lg px-4 py-2">
+            <div className="mt-3 text-sm text-slate-700 bg-white/90 border border-slate-200 rounded-lg px-4 py-2 shadow-sm">
               {resetMessage}
             </div>
           )}
@@ -268,36 +268,36 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
         
         {/* Sensor Monitors - Live OPC UA Values with Circle Meters */}
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-slate-100 mb-4">Live Sensor Monitors</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-4">Live Sensor Monitors</h2>
           <SensorMonitors refreshInterval={2000} />
         </div>
 
         {/* KPI Cards - 4 Large Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           {/* AI PREDICTIONS - Purple */}
-          <div className="bg-gradient-to-br from-purple-600/90 to-purple-800/90 rounded-xl p-6 border border-purple-500/30 shadow-xl relative overflow-hidden">
+          <div className="bg-white/90 rounded-xl p-6 border border-purple-200 shadow-sm relative overflow-hidden">
             <div className="relative z-10">
-              <div className="text-sm font-medium text-purple-200 mb-2">AI PREDICTIONS</div>
-              <div className="text-5xl font-bold text-white mb-2">
+              <div className="text-sm font-medium text-slate-500 mb-2">AI PREDICTIONS</div>
+              <div className="text-5xl font-bold text-slate-900 mb-2">
                 {isFallback ? '--' : (predictions?.length || overview?.predictions?.last_24h || 0)}
               </div>
               <div className="flex items-center gap-2 mb-4">
                 {!isFallback && predictions.length > 0 && (
                   <>
-                    <span className="bg-purple-500/50 text-purple-100 px-3 py-1 rounded text-sm font-medium">
+                    <span className="bg-purple-50 text-purple-800 px-3 py-1 rounded text-sm font-medium border border-purple-200">
                       {anomaliesCount} anomalies
                     </span>
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      anomaliesCount > 2 ? 'bg-red-500/50 text-red-100' :
-                      anomaliesCount > 0 ? 'bg-yellow-500/50 text-yellow-100' :
-                      'bg-green-500/50 text-green-100'
+                      anomaliesCount > 2 ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                      anomaliesCount > 0 ? 'bg-amber-50 text-amber-800 border border-amber-200' :
+                      'bg-emerald-50 text-emerald-700 border border-emerald-200'
                     }`}>
-                      {anomaliesCount > 2 ? '⚠️ Critical' : anomaliesCount > 0 ? '⚠️ Early anomaly' : '✅ Normal'}
+                      {anomaliesCount > 2 ? 'Critical' : anomaliesCount > 0 ? 'Early anomaly' : 'Normal'}
                     </span>
                   </>
                 )}
                 {isFallback && (
-                  <span className="text-xs text-purple-300/70">(Offline)</span>
+                  <span className="text-xs text-slate-500">(Offline)</span>
                 )}
               </div>
               {/* Waveform graph placeholder */}
@@ -322,27 +322,27 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
           </div>
           
           {/* ANOMALIES FOUND - Orange/Yellow */}
-          <div className="bg-gradient-to-br from-orange-500/90 to-amber-600/90 rounded-xl p-6 border border-orange-500/30 shadow-xl relative overflow-hidden">
+          <div className="bg-white/90 rounded-xl p-6 border border-amber-200 shadow-sm relative overflow-hidden">
             <div className="relative z-10">
-              <div className="text-sm font-medium text-orange-200 mb-2">ANOMALIES FOUND</div>
-              <div className="text-5xl font-bold text-white mb-2">
+              <div className="text-sm font-medium text-slate-500 mb-2">ANOMALIES FOUND</div>
+              <div className="text-5xl font-bold text-slate-900 mb-2">
                 {isFallback ? '--' : (anomaliesCount || overview?.alarms?.active || 0)}
               </div>
               <div className="flex items-center gap-2 mb-4">
                 {!isFallback && (
                   <>
-                    <span className="bg-orange-500/50 text-orange-100 px-3 py-1 rounded text-sm font-medium">
+                    <span className="bg-amber-50 text-amber-900 px-3 py-1 rounded text-sm font-medium border border-amber-200">
                       {anomaliesCount > 0 ? 'Action required' : 'All clear'}
                     </span>
                     {predictions.length > 0 && (
-                      <span className="text-xs text-orange-200">
+                      <span className="text-xs text-slate-500">
                         Score: {predictions.find((p: any) => p.prediction === 'anomaly')?.score?.toFixed(2) || '0.00'}
                       </span>
                     )}
                   </>
                 )}
                 {isFallback && (
-                  <span className="text-xs text-orange-300/70">(Offline)</span>
+                  <span className="text-xs text-slate-500">(Offline)</span>
                 )}
               </div>
               {/* Waveform graph */}
@@ -367,13 +367,13 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
           </div>
           
           {/* MACHINES - Green */}
-          <div className="bg-gradient-to-br from-green-600/90 to-emerald-700/90 rounded-xl p-6 border border-green-500/30 shadow-xl relative overflow-hidden">
+          <div className="bg-white/90 rounded-xl p-6 border border-emerald-200 shadow-sm relative overflow-hidden">
             <div className="relative z-10">
-              <div className="text-sm font-medium text-green-200 mb-2">MACHINES</div>
-              <div className="text-5xl font-bold text-white mb-2">
+              <div className="text-sm font-medium text-slate-500 mb-2">MACHINES</div>
+              <div className="text-5xl font-bold text-slate-900 mb-2">
                 {isFallback ? '--' : (overview?.machines?.total || 0)}
               </div>
-              <div className="text-green-100 text-sm mb-4">
+              <div className="text-slate-600 text-sm mb-4">
                 {isFallback ? '--' : (overview?.machines?.online || 0)} {isFallback ? '' : 'online'}
               </div>
               {/* Waveform graph */}
@@ -398,18 +398,18 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
           </div>
           
           {/* ACTIVE ALARMS - Red */}
-          <div className="bg-gradient-to-br from-red-600/90 to-rose-700/90 rounded-xl p-6 border border-red-500/30 shadow-xl relative overflow-hidden">
+          <div className="bg-white/90 rounded-xl p-6 border border-rose-200 shadow-sm relative overflow-hidden">
             <div className="relative z-10">
-              <div className="text-sm font-medium text-red-200 mb-2">ACTIVE ALARMS</div>
-              <div className="text-5xl font-bold text-white mb-2">
+              <div className="text-sm font-medium text-slate-500 mb-2">ACTIVE ALARMS</div>
+              <div className="text-5xl font-bold text-slate-900 mb-2">
                 {isFallback ? '--' : (overview?.alarms?.active || 0)}
               </div>
               <div className="flex items-center gap-2 mb-4">
-                <span className="bg-red-500/50 text-red-100 px-3 py-1 rounded text-sm font-medium">
+                <span className="bg-rose-50 text-rose-800 px-3 py-1 rounded text-sm font-medium border border-rose-200">
                   {isFallback ? 'No live data' : (overview?.alarms?.active === 0 ? 'All clear' : 'Active')}
                 </span>
                 {isFallback && (
-                  <span className="text-xs text-red-300/70">(Offline)</span>
+                  <span className="text-xs text-slate-500">(Offline)</span>
                 )}
               </div>
               {/* Waveform graph */}
@@ -437,10 +437,10 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
         {/* Bottom Widgets - 3 Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Machine Health */}
-          <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-slate-100 mb-4">Machine Health</h2>
+          <div className="bg-white/90 border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Machine Health</h2>
             {overview?.machines?.total > 0 ? (
-              <div className="text-slate-400">
+              <div className="text-slate-600">
                 {overview.machines.total} machines monitored
               </div>
             ) : (
@@ -449,21 +449,21 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
           </div>
           
           {/* Live Predictions */}
-          <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-slate-100 mb-4">Live Predictions</h2>
+          <div className="bg-white/90 border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Live Predictions</h2>
             {chartData.length > 0 ? (
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
-                    <XAxis dataKey="timestamp" tick={{ fill: '#94a3b8', fontSize: 10 }} />
-                    <YAxis domain={[0, 1]} tick={{ fill: '#94a3b8', fontSize: 10 }} />
-                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }} />
+                    <XAxis dataKey="timestamp" tick={{ fill: '#64748b', fontSize: 10 }} />
+                    <YAxis domain={[0, 1]} tick={{ fill: '#64748b', fontSize: 10 }} />
+                    <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', color: '#0f172a' }} />
                     <ReferenceLine y={0.5} stroke="#ef4444" strokeDasharray="3 3" />
                     <ReferenceLine y={0.8} stroke="#f59e0b" strokeDasharray="3 3" />
                     <Line
                       type="monotone"
                       dataKey="score"
-                      stroke="#22d3ee"
+                      stroke="#7c3aed"
                       strokeWidth={2}
                       dot={false}
                     />
@@ -476,16 +476,16 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
           </div>
           
           {/* Machine & Anomaly Trend */}
-          <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-slate-100 mb-4">Machine & Anomaly Trend</h2>
+          <div className="bg-white/90 border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Machine & Anomaly Trend</h2>
             {isFallback ? (
               <div className="text-slate-500">No live data available</div>
             ) : (
               <>
                 <div className="mb-2">
-                  <div className="text-xs text-slate-400 mb-1">MACHINE HEALTH SCORE</div>
+                  <div className="text-xs text-slate-500 mb-1">MACHINE HEALTH SCORE</div>
                   <div className="flex items-center gap-2">
-                    <span className="text-4xl font-bold text-white">
+                    <span className="text-4xl font-bold text-slate-900">
                       {predictionsStats?.total ? Math.round(85 + (predictionsStats.total % 10)) : 84}%
                     </span>
                     <span className="text-2xl">→</span>
@@ -500,8 +500,8 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
                     {anomaliesCount > 2 ? 'Critical' : anomaliesCount > 0 ? 'Warning' : 'Healthy'}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-slate-400">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
                   <span>Services: Backend</span>
                 </div>
               </>
@@ -515,12 +515,12 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
         </div>
         {/* OPC UA Status */}
         {!isFallback && (
-          <div className="mt-6 bg-slate-900/80 border border-slate-700/50 rounded-xl p-6">
+          <div className="mt-6 bg-white/90 border border-slate-200 rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-100">OPC UA Connection Status</h2>
+              <h2 className="text-lg font-semibold text-slate-900">OPC UA Connection Status</h2>
               <a 
                 href="/opcua" 
-                className="text-sm text-emerald-400 hover:text-emerald-300 underline"
+                className="text-sm text-purple-700 hover:text-purple-600 underline"
               >
                 Configure OPC UA →
               </a>
@@ -537,40 +537,40 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
                       opcuaStatus.connected ? 'bg-emerald-400' : 'bg-rose-400'
                     }`}></div>
                     <div>
-                      <div className="text-xs text-slate-400">Connection</div>
-                      <div className="text-sm font-semibold text-slate-200">
+                      <div className="text-xs text-slate-500">Connection</div>
+                      <div className="text-sm font-semibold text-slate-900">
                         {opcuaStatus.connected ? 'Connected' : 'Disconnected'}
                       </div>
                     </div>
                   </div>
-                  <div className="bg-slate-800/50 border border-slate-700/50 p-3 rounded-lg">
-                    <div className="text-xs text-slate-400">Active Nodes</div>
-                    <div className="text-sm font-semibold text-slate-200">
+                  <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg">
+                    <div className="text-xs text-slate-500">Active Nodes</div>
+                    <div className="text-sm font-semibold text-slate-900">
                       {opcuaStatus.node_count || 0}
                     </div>
                   </div>
-                  <div className="bg-slate-800/50 border border-slate-700/50 p-3 rounded-lg">
-                    <div className="text-xs text-slate-400">Active Sources</div>
-                    <div className="text-sm font-semibold text-slate-200">
+                  <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg">
+                    <div className="text-xs text-slate-500">Active Sources</div>
+                    <div className="text-sm font-semibold text-slate-900">
                       {opcuaStatus.sources?.filter((s: any) => s.active).length || 0}
                     </div>
                   </div>
                 </div>
                 {opcuaStatus.sources && opcuaStatus.sources.length > 0 && (
                   <div className="space-y-2">
-                    <div className="text-xs text-slate-400 font-medium">Configured Sources:</div>
+                    <div className="text-xs text-slate-500 font-medium">Configured Sources:</div>
                     {opcuaStatus.sources.map((source: any) => (
-                      <div key={source.id} className="bg-slate-800/50 border border-slate-700/50 p-3 rounded-lg">
+                      <div key={source.id} className="bg-slate-50 border border-slate-200 p-3 rounded-lg">
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="text-sm font-semibold text-slate-200">{source.name}</div>
-                            <div className="text-xs text-slate-400 font-mono">{source.endpoint_url}</div>
+                            <div className="text-sm font-semibold text-slate-900">{source.name}</div>
+                            <div className="text-xs text-slate-500 font-mono">{source.endpoint_url}</div>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className={`w-2 h-2 rounded-full ${
                               source.active ? 'bg-emerald-400' : 'bg-slate-500'
                             }`}></div>
-                            <span className="text-xs text-slate-400">
+                            <span className="text-xs text-slate-500">
                               {source.active ? 'Active' : 'Inactive'} ({source.node_count} nodes)
                             </span>
                           </div>
@@ -592,7 +592,7 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
                     </div>
                     <a 
                       href="/opcua" 
-                      className="text-sm text-emerald-400 hover:text-emerald-300 underline"
+                      className="text-sm text-purple-700 hover:text-purple-600 underline"
                     >
                       Click here to configure your first OPC UA connection
                     </a>
@@ -600,7 +600,7 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
                 )}
               </div>
             ) : (
-              <div className="text-slate-400 text-sm">Loading OPC UA status...</div>
+              <div className="text-slate-500 text-sm">Loading OPC UA status...</div>
             )}
           </div>
         )}

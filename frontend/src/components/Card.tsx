@@ -9,10 +9,10 @@ interface CardProps {
 
 export function Card({ title, children, className = "", headerAction }: CardProps) {
     return (
-        <div className={`bg-slate-900/70 border border-slate-700/40 rounded-2xl p-6 shadow-xl backdrop-blur ${className}`}>
+        <div className={`bg-white/90 border border-slate-200 rounded-2xl p-6 shadow-sm backdrop-blur ${className}`}>
             {title && (
                 <header className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-slate-100">{title}</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
                     {headerAction}
                 </header>
             )}
@@ -32,17 +32,17 @@ interface KPICardProps {
 
 export function KPICard({ label, value, change, trend = "neutral", icon, color = "emerald" }: KPICardProps) {
     const colorClasses: Record<string, string> = {
-        emerald: "from-emerald-500/70 to-emerald-400/40 text-emerald-50",
-        rose: "from-rose-500/70 to-rose-400/40 text-rose-50",
-        sky: "from-sky-500/70 to-sky-400/40 text-sky-50",
-        amber: "from-amber-500/70 to-amber-400/40 text-amber-50",
-        purple: "from-purple-500/70 to-purple-400/40 text-purple-50",
+        emerald: "from-emerald-50 to-emerald-100 text-slate-900 border border-emerald-200",
+        rose: "from-rose-50 to-rose-100 text-slate-900 border border-rose-200",
+        sky: "from-sky-50 to-sky-100 text-slate-900 border border-sky-200",
+        amber: "from-amber-50 to-amber-100 text-slate-900 border border-amber-200",
+        purple: "from-purple-50 to-purple-100 text-slate-900 border border-purple-200",
     };
 
     const trendIcon = trend === "up" ? "↑" : trend === "down" ? "↓" : "";
 
     return (
-        <div className={`bg-gradient-to-br ${colorClasses[color]} rounded-2xl p-6 shadow-lg`}>
+        <div className={`bg-gradient-to-br ${colorClasses[color]} rounded-2xl p-6 shadow-sm`}>
             <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
                     {icon && <div className="text-2xl">{icon}</div>}

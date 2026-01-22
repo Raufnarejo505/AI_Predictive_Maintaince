@@ -10,16 +10,28 @@ export function StatusBadge({ status, variant = "default", size = "md" }: Status
     const statusLower = status?.toLowerCase() || "";
 
     const getStatusStyles = () => {
-        if (statusLower.includes("critical") || statusLower.includes("alarm") || statusLower === "offline") {
-            return "bg-rose-500/20 text-rose-200 border-rose-400/40";
+        const isError = statusLower.includes("critical") || statusLower.includes("alarm") || statusLower === "offline";
+        const isWarning = statusLower.includes("warning") || statusLower.includes("warn") || statusLower === "degraded";
+        const isSuccess = statusLower === "online" || statusLower === "healthy" || statusLower === "normal" || statusLower === "active" || statusLower === "connected";
+
+        if (isError) {
+            return variant === "outline"
+                ? "bg-transparent text-[#1F2937] border-[#EF4444]"
+                : "bg-rose-50 text-[#1F2937] border-rose-200";
         }
-        if (statusLower.includes("warning") || statusLower.includes("warn") || statusLower === "degraded") {
-            return "bg-amber-500/20 text-amber-200 border-amber-400/40";
+        if (isWarning) {
+            return variant === "outline"
+                ? "bg-transparent text-[#1F2937] border-[#F59E0B]"
+                : "bg-amber-50 text-[#1F2937] border-amber-200";
         }
-        if (statusLower === "online" || statusLower === "healthy" || statusLower === "normal" || statusLower === "active") {
-            return "bg-emerald-500/20 text-emerald-200 border-emerald-400/40";
+        if (isSuccess) {
+            return variant === "outline"
+                ? "bg-transparent text-[#1F2937] border-[#22C55E]"
+                : "bg-emerald-50 text-[#1F2937] border-emerald-200";
         }
-        return "bg-slate-500/20 text-slate-200 border-slate-400/40";
+        return variant === "outline"
+            ? "bg-transparent text-[#1F2937] border-[#A78BFA]"
+            : "bg-purple-50 text-[#1F2937] border-purple-200";
     };
 
     const sizeClasses = {

@@ -6,29 +6,30 @@ interface StatusIndicatorProps {
 }
 
 export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ status, size = "md" }) => {
-    const statusMap: Record<string, { emoji: string; color: string }> = {
-        healthy: { emoji: "🟢", color: "text-emerald-400" },
-        online: { emoji: "🟢", color: "text-emerald-400" },
-        warning: { emoji: "🟡", color: "text-amber-400" },
-        degraded: { emoji: "🟡", color: "text-amber-400" },
-        critical: { emoji: "🔴", color: "text-rose-400" },
-        offline: { emoji: "🔴", color: "text-rose-400" },
-        maintenance: { emoji: "🔵", color: "text-blue-400" },
+    const statusMap: Record<string, { color: string }> = {
+        healthy: { color: "bg-emerald-400" },
+        online: { color: "bg-emerald-400" },
+        warning: { color: "bg-amber-400" },
+        degraded: { color: "bg-amber-400" },
+        critical: { color: "bg-rose-400" },
+        offline: { color: "bg-rose-400" },
+        maintenance: { color: "bg-blue-400" },
     };
 
     const statusKey = status?.toLowerCase() || "offline";
-    const statusInfo = statusMap[statusKey] || { emoji: "⚪", color: "text-slate-400" };
+    const statusInfo = statusMap[statusKey] || { color: "bg-slate-400" };
 
     const sizeClasses = {
-        sm: "text-xs",
-        md: "text-base",
-        lg: "text-lg",
+        sm: "w-2 h-2",
+        md: "w-3 h-3",
+        lg: "w-4 h-4",
     };
 
     return (
-        <span className={`inline-block ${sizeClasses[size]} ${statusInfo.color}`} role="img" aria-label={status}>
-            {statusInfo.emoji}
-        </span>
+        <span
+            className={`inline-block rounded-full ${sizeClasses[size]} ${statusInfo.color}`}
+            aria-label={status}
+        />
     );
 };
 

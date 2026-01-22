@@ -152,7 +152,7 @@ export default function OPCUAWizard() {
             setSuccess(null);
             const payload = buildPayload();
             const response = await api.post("/opcua/activate", payload);
-            setSuccess(`✅ Source activated with ${response.data.node_count} node(s). Data is now being collected!`);
+            setSuccess(`Source activated with ${response.data.node_count} node(s). Data is now being collected.`);
             setIsConnected(true);
             
             // Wait a moment then redirect to dashboard
@@ -179,26 +179,26 @@ export default function OPCUAWizard() {
     };
 
     return (
-        <div className="min-h-screen bg-[#010313] text-slate-100 p-6">
+        <div className="min-h-screen bg-[#FAFAFF] text-[#1F2937] p-6">
             <div className="max-w-7xl mx-auto">
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-emerald-400 mb-2">OPC UA Connection</h1>
-                    <p className="text-slate-400">Connect to your OPC UA simulator and monitor values in real-time</p>
+                    <h1 className="text-3xl font-bold text-[#1F2937] mb-2">OPC UA Connection</h1>
+                    <p className="text-[#4B5563]">Connect to your OPC UA simulator and monitor values in real-time</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Configuration Panel */}
-                    <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-6">
-                        <h2 className="text-xl font-semibold text-slate-100 mb-4">Configuration</h2>
+                    <div className="bg-white/90 border border-slate-200 rounded-xl p-6 shadow-sm">
+                        <h2 className="text-xl font-semibold text-[#1F2937] mb-4">Configuration</h2>
                         
                         {/* Endpoint URL */}
                         <div className="mb-6">
-                            <label className="block text-sm font-medium text-slate-300 mb-2">
+                            <label className="block text-sm font-medium text-[#4B5563] mb-2">
                                 OPC UA Server URL
                             </label>
                             <input
                                 type="text"
-                                className="w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                className="w-full rounded-lg bg-white border border-slate-200 px-4 py-2 text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300"
                                 placeholder="opc.tcp://hostname:port/path"
                                 value={endpointUrl}
                                 onChange={(e) => setEndpointUrl(e.target.value)}
@@ -208,13 +208,13 @@ export default function OPCUAWizard() {
                         {/* Nodes Configuration */}
                         <div className="mb-6">
                             <div className="flex items-center justify-between mb-3">
-                                <label className="block text-sm font-medium text-slate-300">
+                                <label className="block text-sm font-medium text-[#4B5563]">
                                     Variables / Nodes
                                 </label>
                                 <button
                                     type="button"
                                     onClick={addNode}
-                                    className="px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 text-sm font-medium"
+                                    className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 text-sm font-medium border border-purple-200"
                                 >
                                     + Add Variable
                                 </button>
@@ -224,24 +224,24 @@ export default function OPCUAWizard() {
                                 {nodes.map((node, index) => (
                                     <div
                                         key={index}
-                                        className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4"
+                                        className="bg-[#F6F3FF] border border-slate-200 rounded-lg p-4"
                                     >
                                         <div className="grid grid-cols-2 gap-3 mb-3">
                                             <div>
-                                                <label className="block text-xs text-slate-400 mb-1">Node ID</label>
+                                                <label className="block text-xs text-[#9CA3AF] mb-1">Node ID</label>
                                                 <input
                                                     type="text"
-                                                    className="w-full rounded bg-slate-900 border border-slate-700 px-2 py-1.5 text-sm text-slate-100"
+                                                    className="w-full rounded bg-white border border-slate-200 px-2 py-1.5 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300"
                                                     placeholder="ns=3;i=1009"
                                                     value={node.nodeId}
                                                     onChange={(e) => updateNode(index, "nodeId", e.target.value)}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-slate-400 mb-1">Alias</label>
+                                                <label className="block text-xs text-[#9CA3AF] mb-1">Alias</label>
                                                 <input
                                                     type="text"
-                                                    className="w-full rounded bg-slate-900 border border-slate-700 px-2 py-1.5 text-sm text-slate-100"
+                                                    className="w-full rounded bg-white border border-slate-200 px-2 py-1.5 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300"
                                                     placeholder="temperature"
                                                     value={node.alias}
                                                     onChange={(e) => updateNode(index, "alias", e.target.value)}
@@ -250,39 +250,39 @@ export default function OPCUAWizard() {
                                         </div>
                                         <div className="grid grid-cols-4 gap-2">
                                             <div>
-                                                <label className="block text-xs text-slate-400 mb-1">Unit</label>
+                                                <label className="block text-xs text-[#9CA3AF] mb-1">Unit</label>
                                                 <input
                                                     type="text"
-                                                    className="w-full rounded bg-slate-900 border border-slate-700 px-2 py-1.5 text-sm text-slate-100"
+                                                    className="w-full rounded bg-white border border-slate-200 px-2 py-1.5 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300"
                                                     placeholder="°C"
                                                     value={node.unit}
                                                     onChange={(e) => updateNode(index, "unit", e.target.value)}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-slate-400 mb-1">Category</label>
+                                                <label className="block text-xs text-[#9CA3AF] mb-1">Category</label>
                                                 <input
                                                     type="text"
-                                                    className="w-full rounded bg-slate-900 border border-slate-700 px-2 py-1.5 text-sm text-slate-100"
+                                                    className="w-full rounded bg-white border border-slate-200 px-2 py-1.5 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300"
                                                     placeholder="temperature"
                                                     value={node.category}
                                                     onChange={(e) => updateNode(index, "category", e.target.value)}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-slate-400 mb-1">Min</label>
+                                                <label className="block text-xs text-[#9CA3AF] mb-1">Min</label>
                                                 <input
                                                     type="number"
-                                                    className="w-full rounded bg-slate-900 border border-slate-700 px-2 py-1.5 text-sm text-slate-100"
+                                                    className="w-full rounded bg-white border border-slate-200 px-2 py-1.5 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300"
                                                     value={node.min || 0}
                                                     onChange={(e) => updateNode(index, "min", parseFloat(e.target.value) || 0)}
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-slate-400 mb-1">Max</label>
+                                                <label className="block text-xs text-[#9CA3AF] mb-1">Max</label>
                                                 <input
                                                     type="number"
-                                                    className="w-full rounded bg-slate-900 border border-slate-700 px-2 py-1.5 text-sm text-slate-100"
+                                                    className="w-full rounded bg-white border border-slate-200 px-2 py-1.5 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300"
                                                     value={node.max || 100}
                                                     onChange={(e) => updateNode(index, "max", parseFloat(e.target.value) || 100)}
                                                 />
@@ -291,7 +291,7 @@ export default function OPCUAWizard() {
                                         <button
                                             type="button"
                                             onClick={() => removeNode(index)}
-                                            className="mt-2 px-2 py-1 rounded text-xs bg-rose-500/20 text-rose-400 hover:bg-rose-500/30"
+                                            className="mt-2 px-2 py-1 rounded text-xs bg-rose-50 text-[#1F2937] hover:bg-rose-100 border border-rose-200"
                                         >
                                             Remove
                                         </button>
@@ -306,7 +306,7 @@ export default function OPCUAWizard() {
                                 type="button"
                                 onClick={handleTest}
                                 disabled={isTesting || isActivating}
-                                className="flex-1 px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-100 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                                className="flex-1 px-4 py-2 rounded-lg bg-white border border-slate-200 text-[#1F2937] hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                             >
                                 {isTesting ? "Testing..." : "Test Connection"}
                             </button>
@@ -314,7 +314,7 @@ export default function OPCUAWizard() {
                                 type="button"
                                 onClick={handleActivate}
                                 disabled={isActivating || isTesting || !testResult?.ok}
-                                className="flex-1 px-4 py-2 rounded-lg bg-emerald-500 text-slate-900 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                                className="flex-1 px-4 py-2 rounded-lg bg-purple-700 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                             >
                                 {isActivating ? "Activating..." : "Activate & Start"}
                             </button>
@@ -322,16 +322,16 @@ export default function OPCUAWizard() {
 
                         {/* Messages */}
                         {error && (
-                            <div className="mt-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm">
+                            <div className="mt-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-[#1F2937] text-sm">
                                 {error}
                             </div>
                         )}
                         {success && (
-                            <div className="mt-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm">
+                            <div className="mt-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-[#1F2937] text-sm">
                                 <div className="mb-2">{success}</div>
                                 <button
                                     onClick={() => navigate("/")}
-                                    className="mt-2 px-4 py-2 rounded-lg bg-emerald-500 text-slate-900 hover:bg-emerald-400 font-semibold text-sm"
+                                    className="mt-2 px-4 py-2 rounded-lg bg-purple-700 text-white hover:bg-purple-600 font-semibold text-sm"
                                 >
                                     Go to Dashboard →
                                 </button>
@@ -340,11 +340,11 @@ export default function OPCUAWizard() {
                         {testResult && (
                             <div className={`mt-4 p-3 rounded-lg border text-sm ${
                                 testResult.ok 
-                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
-                                    : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+                                    ? 'bg-emerald-50 border-emerald-200 text-[#1F2937]' 
+                                    : 'bg-rose-50 border-rose-200 text-[#1F2937]'
                             }`}>
                                 <div className="font-semibold mb-2">
-                                    {testResult.ok ? '✅ Connection Successful' : '❌ Connection Failed'}
+                                    {testResult.ok ? 'Connection successful' : 'Connection failed'}
                                 </div>
                                 {testResult.handshakeLogs.length > 0 && (
                                     <div className="text-xs font-mono space-y-1 max-h-32 overflow-y-auto">
@@ -358,8 +358,8 @@ export default function OPCUAWizard() {
                     </div>
 
                     {/* Live Values Display */}
-                    <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-6">
-                        <h2 className="text-xl font-semibold text-slate-100 mb-4">Live Values</h2>
+                    <div className="bg-white/90 border border-slate-200 rounded-xl p-6 shadow-sm">
+                        <h2 className="text-xl font-semibold text-[#1F2937] mb-4">Live Values</h2>
                         
                         {isConnected ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -390,11 +390,11 @@ export default function OPCUAWizard() {
                                 })}
                             </div>
                         ) : (
-                            <div className="flex items-center justify-center h-64 text-slate-400">
+                            <div className="flex items-center justify-center h-64 text-[#4B5563]">
                                 <div className="text-center">
-                                    <div className="text-4xl mb-2">📡</div>
+                                    <div className="text-4xl mb-2"></div>
                                     <div>Activate connection to see live values</div>
-                                    <div className="text-xs mt-2 text-slate-500">
+                                    <div className="text-xs mt-2 text-[#9CA3AF]">
                                         Click "Activate & Start" after testing connection
                                     </div>
                                 </div>

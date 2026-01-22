@@ -117,14 +117,14 @@ async def generate_live_dummy_data():
 
 async def start_live_data_generator(interval_seconds: int = 5):
     """Start background task that generates live data every N seconds"""
-    logger.info(f"🚀 Starting live data generator (interval: {interval_seconds}s)")
+    logger.info(f"Starting live data generator (interval: {interval_seconds}s)")
     
     while True:
         try:
             await generate_live_dummy_data()
             await asyncio.sleep(interval_seconds)
         except asyncio.CancelledError:
-            logger.info("🛑 Live data generator cancelled")
+            logger.info("Live data generator cancelled")
             break
         except Exception as e:
             logger.error(f"Error in live data generator loop: {e}")

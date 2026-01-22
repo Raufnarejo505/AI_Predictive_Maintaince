@@ -53,14 +53,14 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
             }}
         >
             <div
-                className={`bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col`}
+                className={`bg-white border border-slate-200 rounded-2xl shadow-xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden flex flex-col`}
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="flex items-center justify-between p-6 border-b border-slate-700">
-                    <h2 className="text-xl font-semibold text-slate-100">{title}</h2>
+                <div className="flex items-center justify-between p-6 border-b border-slate-200">
+                    <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
                     <button
                         onClick={onClose}
-                        className="text-slate-400 hover:text-slate-200 transition-colors"
+                        className="text-slate-500 hover:text-slate-700 transition-colors"
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

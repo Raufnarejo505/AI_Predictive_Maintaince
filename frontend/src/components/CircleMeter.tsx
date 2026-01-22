@@ -28,29 +28,29 @@ export const CircleMeter: React.FC<CircleMeterProps> = ({
   const getStatusColor = () => {
     switch (status) {
       case 'critical':
-        return '#ef4444'; // red-500
+        return '#EF4444';
       case 'warning':
-        return '#f59e0b'; // amber-500
+        return '#F59E0B';
       default:
-        return '#22d3ee'; // cyan-400
+        return '#8B5CF6';
     }
   };
 
   const getStatusBgColor = () => {
     switch (status) {
       case 'critical':
-        return 'bg-red-500/10 border-red-500/30';
+        return 'bg-rose-50 border-rose-200';
       case 'warning':
-        return 'bg-yellow-500/10 border-yellow-500/30';
+        return 'bg-amber-50 border-amber-200';
       default:
-        return 'bg-cyan-500/10 border-cyan-500/30';
+        return 'bg-purple-50 border-purple-200';
     }
   };
 
   return (
-    <div className={`relative ${getStatusBgColor()} border-2 rounded-2xl p-4 transition-all duration-300 overflow-hidden`}>
+    <div className={`relative bg-white/90 border ${getStatusBgColor()} rounded-2xl p-4 shadow-sm transition-all duration-300 overflow-hidden`}>
       <div className="flex flex-col items-center h-full">
-        <h3 className="text-sm font-medium text-slate-300 uppercase tracking-wide mb-3">
+        <h3 className="text-sm font-medium text-[#4B5563] uppercase tracking-wide mb-3">
           {label}
         </h3>
         
@@ -67,7 +67,7 @@ export const CircleMeter: React.FC<CircleMeterProps> = ({
               cy={size / 2}
               r={radius}
               fill="none"
-              stroke="rgba(148, 163, 184, 0.2)"
+              stroke="rgba(229, 231, 235, 1)"
               strokeWidth="12"
             />
             {/* Progress circle */}
@@ -87,14 +87,16 @@ export const CircleMeter: React.FC<CircleMeterProps> = ({
           
           {/* Value display */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div className="text-4xl font-bold text-white mb-1">
+            <div className="text-4xl font-bold text-[#1F2937] mb-1">
               {value.toFixed(value < 1 ? 2 : value < 10 ? 1 : 0)}
             </div>
-            <div className="text-sm text-slate-400">{unit}</div>
-            <div className={`text-xs mt-2 px-2 py-1 rounded ${
-              status === 'critical' ? 'bg-red-500/20 text-red-300' :
-              status === 'warning' ? 'bg-yellow-500/20 text-yellow-300' :
-              'bg-green-500/20 text-green-300'
+            <div className="text-sm text-[#4B5563]">{unit}</div>
+            <div className={`text-xs mt-2 px-2 py-1 rounded-lg border font-medium ${
+              status === 'critical'
+                ? 'bg-rose-50 text-[#1F2937] border-rose-200'
+                : status === 'warning'
+                ? 'bg-amber-50 text-[#1F2937] border-amber-200'
+                : 'bg-emerald-50 text-[#1F2937] border-emerald-200'
             }`}>
               {status.toUpperCase()}
             </div>
@@ -102,7 +104,7 @@ export const CircleMeter: React.FC<CircleMeterProps> = ({
         </div>
         
         {/* Min/Max labels */}
-        <div className="flex justify-between w-full mt-3 text-xs text-slate-500">
+        <div className="flex justify-between w-full mt-3 text-xs text-[#9CA3AF]">
           <span>Min: {min}</span>
           <span>Max: {max}</span>
         </div>

@@ -159,12 +159,12 @@ class MQTTIngestor:
                         
                         try:
                             self.queue.put_nowait(sensor_payload)
-                            logger.debug("✅ Queued sensor data: {} = {}", sensor_name, sensor_payload["value"])
+                            logger.debug("Queued sensor data: {} = {}", sensor_name, sensor_payload["value"])
                         except Exception as qe:
-                            logger.error("❌ Failed to queue sensor message: {}", qe)
+                            logger.error("Failed to queue sensor message: {}", qe)
                 
                 # Log the original message
-                logger.info("📨 Received OPC UA edge gateway message on topic {}: machine_id={}, profile={}, sensors={}", 
+                logger.info("Received OPC UA edge gateway message on topic {}: machine_id={}, profile={}, sensors={}", 
                            msg.topic, payload.get("machine_id", "unknown"), payload.get("profile", "unknown"),
                            {k: v for k, v in payload.items() if k in sensor_mappings.keys()})
                 return  # Already queued individual sensor messages
@@ -199,30 +199,30 @@ class MQTTIngestor:
             
             # Validate required fields
             if not payload.get("machine_id") and not payload.get("machineId"):
-                logger.warning("⚠️ MQTT message missing machine_id: {}", payload)
+                logger.warning("MQTT message missing machine_id: {}", payload)
                 return
             
             if not payload.get("sensor_id"):
-                logger.warning("⚠️ MQTT message missing sensor_id: {}", payload)
+                logger.warning("MQTT message missing sensor_id: {}", payload)
                 return
             
             # Normalize machine_id field
             if "machineId" in payload and "machine_id" not in payload:
                 payload["machine_id"] = payload.pop("machineId")
             
-            logger.info("📨 Received MQTT message on topic {}: machine_id={}, sensor_id={}, readings={}", 
+            logger.info("Received MQTT message on topic {}: machine_id={}, sensor_id={}, readings={}", 
                        msg.topic, payload.get("machine_id", "unknown"), payload.get("sensor_id", "unknown"), 
                        payload.get("values", payload.get("value", "N/A")))
             
             try:
                 self.queue.put_nowait(payload)
-                logger.debug("✅ Message queued successfully")
+                logger.debug("Message queued successfully")
             except Exception as qe:
-                logger.error("❌ Failed to queue message: {}", qe)
+                logger.error("Failed to queue message: {}", qe)
         except json.JSONDecodeError as exc:
-            logger.error("❌ Failed to parse MQTT payload as JSON: {} - Raw payload: {}", exc, msg.payload.decode()[:200] if len(msg.payload) > 0 else "empty")
+            logger.error("Failed to parse MQTT payload as JSON: {} - Raw payload: {}", exc, msg.payload.decode()[:200] if len(msg.payload) > 0 else "empty")
         except Exception as exc:
-            logger.error("❌ Failed to process MQTT message: {} - Raw payload: {}", exc, msg.payload.decode()[:200] if len(msg.payload) > 0 else "empty")
+            logger.error("Failed to process MQTT message: {} - Raw payload: {}", exc, msg.payload.decode()[:200] if len(msg.payload) > 0 else "empty")
     
     def _get_unit_for_sensor(self, sensor_name: str) -> str:
         """Get unit for sensor based on name."""
@@ -236,25 +236,25 @@ class MQTTIngestor:
         return units.get(sensor_name, "")
 
     async def _worker(self):
-        logger.info("🔄 MQTT worker started, waiting for messages...")
+        logger.info("MQTT worker started, waiting for messages...")
         try:
             while True:
                 try:
                     payload = await self.queue.get()
-                    logger.info("📦 Message dequeued from queue, processing... machine_id={}, sensor_id={}", 
+                    logger.info("Message dequeued from queue, processing... machine_id={}, sensor_id={}", 
                                payload.get("machine_id", "unknown"), payload.get("sensor_id", "unknown"))
                     await self._handle_message(payload)
                     self.queue.task_done()
                 except asyncio.CancelledError:
-                    logger.info("🔄 Worker task cancelled, shutting down...")
+                    logger.info("Worker task cancelled, shutting down...")
                     break
                 except Exception as e:
-                    logger.error("❌ Error in worker processing message: {}", e)
+                    logger.error("Error in worker processing message: {}", e)
                     import traceback
                     logger.error("Traceback: {}", traceback.format_exc())
                     self.queue.task_done()  # Mark task as done even on error
         except Exception as e:
-            logger.error("❌ Fatal error in worker loop: {}", e)
+            logger.error("Fatal error in worker loop: {}", e)
             import traceback
             logger.error("Traceback: {}", traceback.format_exc())
 

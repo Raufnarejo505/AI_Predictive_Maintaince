@@ -96,7 +96,7 @@ async def test_connection(
     handshake_logs: List[str] = []
     sample_preview: List[Dict[str, Any]] = []
     
-    handshake_logs.append(f"🔌 Preparing OPC UA connection test to {payload.endpoint_url}")
+    handshake_logs.append(f"Preparing OPC UA connection test to {payload.endpoint_url}")
     
     try:
         # Validate payload first
@@ -105,14 +105,14 @@ async def test_connection(
         if not payload.nodes:
             raise HTTPException(status_code=400, detail="At least one node must be configured")
         
-        handshake_logs.append("✅ Configuration payload validated")
+        handshake_logs.append("Configuration payload validated")
         
         # Try to import asyncua
         try:
             from asyncua import Client, ua
         except ImportError:
-            handshake_logs.append("⚠️ asyncua library not installed - connection test skipped")
-            handshake_logs.append("💡 Install with: pip install asyncua")
+            handshake_logs.append("asyncua library not installed - connection test skipped")
+            handshake_logs.append("Install with: pip install asyncua")
             return {
                 "ok": False,
                 "handshake_logs": handshake_logs,
@@ -121,25 +121,25 @@ async def test_connection(
             }
         
         # Attempt actual connection
-        handshake_logs.append(f"🔗 Attempting to connect to {payload.endpoint_url}...")
+        handshake_logs.append(f"Attempting to connect to {payload.endpoint_url}...")
         
         try:
             async with Client(url=payload.endpoint_url) as client:
-                handshake_logs.append("✅ Successfully connected to OPC UA server")
+                handshake_logs.append("Successfully connected to OPC UA server")
                 
                 # Configure security if needed
                 if payload.security_mode.lower() != "anonymous":
                     if payload.username and payload.password:
                         client.set_user(payload.username)
                         client.set_password(payload.password)
-                        handshake_logs.append(f"🔐 Authenticated as {payload.username}")
+                        handshake_logs.append(f"Authenticated as {payload.username}")
                 
                 # Try to read from first few nodes
                 nodes_to_test = payload.nodes[:3] if len(payload.nodes) > 3 else payload.nodes
                 
                 for node_cfg in nodes_to_test:
                     try:
-                        handshake_logs.append(f"📡 Reading node: {node_cfg.node_id}")
+                        handshake_logs.append(f"Reading node: {node_cfg.node_id}")
                         node = client.get_node(node_cfg.node_id)
                         value = await node.read_value()
                         data_value = await node.read_data_value()
@@ -154,9 +154,9 @@ async def test_connection(
                             "unit": node_cfg.unit or "",
                             "node_id": node_cfg.node_id,
                         })
-                        handshake_logs.append(f"✅ Node {node_cfg.node_id} read successfully: {value}")
+                        handshake_logs.append(f"Node {node_cfg.node_id} read successfully: {value}")
                     except Exception as node_exc:
-                        handshake_logs.append(f"❌ Failed to read node {node_cfg.node_id}: {str(node_exc)}")
+                        handshake_logs.append(f"Failed to read node {node_cfg.node_id}: {str(node_exc)}")
                         sample_preview.append({
                             "timestamp": datetime.utcnow().isoformat() + "Z",
                             "alias": node_cfg.alias,
@@ -167,7 +167,7 @@ async def test_connection(
                             "error": str(node_exc),
                         })
                 
-                handshake_logs.append(f"✅ Connection test completed - {len(sample_preview)} node(s) tested")
+                handshake_logs.append(f"Connection test completed - {len(sample_preview)} node(s) tested")
                 
                 return {
                     "ok": True,
@@ -177,16 +177,16 @@ async def test_connection(
                 
         except Exception as conn_exc:
             error_msg = str(conn_exc)
-            handshake_logs.append(f"❌ Connection failed: {error_msg}")
+            handshake_logs.append(f"Connection failed: {error_msg}")
             
             # Provide helpful error messages
             if "Connection refused" in error_msg or "timeout" in error_msg.lower():
-                handshake_logs.append("💡 Check if OPC UA server is running and accessible")
-                handshake_logs.append("💡 Verify endpoint URL and port are correct")
-                handshake_logs.append("💡 Check firewall settings")
+                handshake_logs.append("Check if OPC UA server is running and accessible")
+                handshake_logs.append("Verify endpoint URL and port are correct")
+                handshake_logs.append("Check firewall settings")
             elif "Name resolution" in error_msg or "getaddrinfo" in error_msg:
-                handshake_logs.append("💡 Check hostname/IP address is correct")
-                handshake_logs.append("💡 Try using IP address instead of hostname")
+                handshake_logs.append("Check hostname/IP address is correct")
+                handshake_logs.append("Try using IP address instead of hostname")
             
             return {
                 "ok": False,
@@ -199,7 +199,7 @@ async def test_connection(
         raise
     except Exception as exc:
         error_msg = str(exc)
-        handshake_logs.append(f"❌ Test failed: {error_msg}")
+        handshake_logs.append(f"Test failed: {error_msg}")
         raise HTTPException(status_code=400, detail=error_msg)
 
 

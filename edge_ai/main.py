@@ -124,7 +124,7 @@ class ProfileProcessor:
     def process_advanced_wear(payload: TelemetryPayload):
         """Process data during advanced wear condition (profile=2)."""
         logger.error(
-            f"🔴 ADVANCED WEAR: Machine {payload.machine_id} - "
+            f"ADVANCED WEAR: Machine {payload.machine_id} - "
             f"Wear Index={payload.wear_index:.1f}% (threshold: 30-50%)"
         )
         logger.error(
@@ -142,7 +142,7 @@ class ProfileProcessor:
     def process_fault(payload: TelemetryPayload):
         """Process data during fault condition (profile=3)."""
         logger.critical(
-            f"🚨 FAULT: Machine {payload.machine_id} - "
+            f"FAULT: Machine {payload.machine_id} - "
             f"System in fault state!"
         )
         logger.critical(
@@ -191,7 +191,7 @@ class AIModelInterface:
         """Load an AI model from file or URL."""
         # TODO: Implement model loading
         # Example: self.models[model_name] = load_model(model_path)
-        logger.info(f"📦 AI Model '{model_name}' loaded from {model_path}")
+        logger.info(f"AI Model '{model_name}' loaded from {model_path}")
         self.enabled = True
     
     def predict(self, model_name: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -250,17 +250,17 @@ class EdgeAIApplication:
     def _on_connect(self, client, userdata, flags, rc):
         """Callback when MQTT client connects."""
         if rc == 0:
-            logger.info(f"✅ Connected to MQTT broker at {self.mqtt_broker}:{self.mqtt_port}")
+            logger.info(f"Connected to MQTT broker at {self.mqtt_broker}:{self.mqtt_port}")
             # Subscribe to telemetry topics
             client.subscribe(self.topic_pattern, qos=1)
-            logger.info(f"📡 Subscribed to topic pattern: {self.topic_pattern}")
+            logger.info(f"Subscribed to topic pattern: {self.topic_pattern}")
         else:
-            logger.error(f"❌ Failed to connect to MQTT broker. Return code: {rc}")
+            logger.error(f"Failed to connect to MQTT broker. Return code: {rc}")
     
     def _on_disconnect(self, client, userdata, rc):
         """Callback when MQTT client disconnects."""
         if rc != 0:
-            logger.warning(f"⚠️  Unexpected MQTT disconnection. Return code: {rc}")
+            logger.warning(f"Unexpected MQTT disconnection. Return code: {rc}")
     
     def _on_message(self, client, userdata, msg):
         """Callback when MQTT message is received."""
@@ -303,7 +303,7 @@ class EdgeAIApplication:
     def start(self):
         """Start the Edge/AI application."""
         self.running = True
-        logger.info("🚀 Starting Edge/AI Application")
+        logger.info("Starting Edge/AI Application")
         logger.info(f"   MQTT Broker: {self.mqtt_broker}:{self.mqtt_port}")
         logger.info(f"   Topic Pattern: {self.topic_pattern}")
         logger.info(f"   AI Models: {'Enabled' if self.ai_models.is_available() else 'Disabled'}")
@@ -318,32 +318,32 @@ class EdgeAIApplication:
             while self.running:
                 time.sleep(30)
                 logger.info(
-                    f"📊 Stats: Received={self.stats['messages_received']}, "
+                    f"Stats: Received={self.stats['messages_received']}, "
                     f"Processed={self.stats['messages_processed']}, "
                     f"Invalid={self.stats['messages_invalid']}"
                 )
                 
         except KeyboardInterrupt:
-            logger.info("🛑 Keyboard interrupt received")
+            logger.info("Keyboard interrupt received")
         except Exception as e:
-            logger.error(f"❌ Fatal error: {e}")
+            logger.error(f"Fatal error: {e}")
         finally:
             self.stop()
     
     def stop(self):
         """Stop the Edge/AI application gracefully."""
-        logger.info("🛑 Stopping Edge/AI Application...")
+        logger.info("Stopping Edge/AI Application...")
         self.running = False
         
         if self.mqtt_client:
             try:
                 self.mqtt_client.loop_stop()
                 self.mqtt_client.disconnect()
-                logger.info("✅ MQTT client disconnected")
+                logger.info("MQTT client disconnected")
             except Exception as e:
                 logger.error(f"Error disconnecting MQTT client: {e}")
         
-        logger.info("✅ Application stopped")
+        logger.info("Application stopped")
 
 
 def main():
@@ -364,7 +364,7 @@ def main():
     
     # Handle graceful shutdown
     def signal_handler(sig, frame):
-        logger.info("🛑 Received shutdown signal")
+        logger.info("Received shutdown signal")
         app.stop()
         sys.exit(0)
     

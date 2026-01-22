@@ -16,27 +16,27 @@ export default function ServiceStatusCard({ label }: ServiceStatusCardProps) {
             return {
                 status: isHealthy ? "Healthy" : status,
                 color: isHealthy
-                    ? "bg-emerald-500/20 border-emerald-400/40 text-emerald-200"
-                    : "bg-rose-500/20 border-rose-400/40 text-rose-200",
+                    ? "bg-emerald-50 border-emerald-200 text-[#1F2937]"
+                    : "bg-rose-50 border-rose-200 text-[#1F2937]",
             };
         } else if (label === "MQTT") {
             const connected = mqttStatus?.connected || false;
             return {
                 status: connected ? "Connected" : "Disconnected",
                 color: connected
-                    ? "bg-sky-500/20 border-sky-400/40 text-sky-200"
-                    : "bg-rose-500/20 border-rose-400/40 text-rose-200",
+                    ? "bg-purple-50 border-purple-200 text-[#1F2937]"
+                    : "bg-rose-50 border-rose-200 text-[#1F2937]",
             };
         }
-        return { status: "Unknown", color: "bg-slate-500/20 border-slate-400/40 text-slate-200" };
+        return { status: "Unknown", color: "bg-purple-50 border-purple-200 text-[#1F2937]" };
     };
 
     const { status, color } = getStatus();
 
     return (
-        <div className={`px-5 py-3 rounded-2xl border ${color} text-sm font-medium backdrop-blur`}>
-            <p className="text-xs uppercase tracking-[0.3em] opacity-70 mb-1">{label}</p>
-            <p className="text-lg font-semibold">{status}</p>
+        <div className={`px-5 py-3 rounded-2xl border ${color} text-sm font-medium shadow-sm`}>
+            <p className="text-xs uppercase tracking-[0.3em] text-[#9CA3AF] mb-1">{label}</p>
+            <p className="text-lg font-semibold text-[#1F2937]">{status}</p>
         </div>
     );
 }

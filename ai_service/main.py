@@ -254,7 +254,7 @@ class PredictionEngine:
             try:
                 import sklearn
                 sklearn_version = sklearn.__version__
-                print(f"📦 Loading models with scikit-learn {sklearn_version}")
+                print(f"Loading models with scikit-learn {sklearn_version}")
                 
                 model = joblib.load(model_file)
                 scaler = joblib.load(scaler_file)
@@ -556,12 +556,12 @@ async def buffer_status():
 if __name__ == "__main__":
     import uvicorn
     
-    print("🚀 Starting AI Anomaly Detection Service...")
-    print("📊 Health: http://localhost:8000/health")
-    print("📈 Metrics: http://localhost:8000/metrics")
-    print("🔧 System Status: http://localhost:8000/system/status")
-    print("🤖 Predictions: POST http://localhost:8000/predict")
-    print("📚 API Docs: http://localhost:8000/docs")
+    print("Starting AI Anomaly Detection Service...")
+    print("Health: http://localhost:8000/health")
+    print("Metrics: http://localhost:8000/metrics")
+    print("System Status: http://localhost:8000/system/status")
+    print("Predictions: POST http://localhost:8000/predict")
+    print("API Docs: http://localhost:8000/docs")
     
     uvicorn.run(
         "main:app",

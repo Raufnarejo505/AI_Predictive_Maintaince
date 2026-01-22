@@ -103,9 +103,9 @@ export const LiveDataTable: React.FC = () => {
               temperature: entry.sensors.temperature?.value || 0,
               vibration: entry.sensors.vibration?.value || 0,
               anomaly: pred.score || pred.confidence || 0,
-              prediction: pred.prediction === 'anomaly' ? '⚠️ Anomaly' : 
-                         pred.status === 'warning' ? '⚠️ Warning' : 
-                         pred.status === 'critical' ? '🔴 Critical' : '✅ Healthy',
+              prediction: pred.prediction === 'anomaly' ? 'Anomaly' : 
+                         pred.status === 'warning' ? 'Warning' : 
+                         pred.status === 'critical' ? 'Critical' : 'Healthy',
               machine: entry.machine,
             };
           });

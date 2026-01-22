@@ -180,33 +180,33 @@ export const SensorMonitors: React.FC<SensorMonitorsProps> = ({ refreshInterval 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'critical':
-        return 'border-red-500 bg-red-500/10';
+        return 'border-rose-200 bg-rose-50';
       case 'warning':
-        return 'border-yellow-500 bg-yellow-500/10';
+        return 'border-amber-200 bg-amber-50';
       default:
-        return 'border-green-500 bg-green-500/10';
+        return 'border-emerald-200 bg-emerald-50';
     }
   };
 
   const getStatusTextColor = (status: string) => {
     switch (status) {
       case 'critical':
-        return 'text-red-400';
+        return 'text-[#1F2937]';
       case 'warning':
-        return 'text-yellow-400';
+        return 'text-[#1F2937]';
       default:
-        return 'text-green-400';
+        return 'text-[#1F2937]';
     }
   };
 
   const getStatusIndicator = (status: string) => {
     switch (status) {
       case 'critical':
-        return '🔴';
+        return 'Critical';
       case 'warning':
-        return '🟡';
+        return 'Warning';
       default:
-        return '🟢';
+        return 'Healthy';
     }
   };
 
@@ -214,9 +214,9 @@ export const SensorMonitors: React.FC<SensorMonitorsProps> = ({ refreshInterval 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-4 animate-pulse">
-            <div className="h-4 bg-slate-700 rounded w-3/4 mb-2"></div>
-            <div className="h-8 bg-slate-700 rounded w-1/2"></div>
+          <div key={i} className="bg-white/90 border border-slate-200 rounded-xl p-4 animate-pulse shadow-sm">
+            <div className="h-4 bg-slate-200 rounded w-3/4 mb-2"></div>
+            <div className="h-8 bg-slate-200 rounded w-1/2"></div>
           </div>
         ))}
       </div>
@@ -226,10 +226,10 @@ export const SensorMonitors: React.FC<SensorMonitorsProps> = ({ refreshInterval 
   // If no data, show empty state without error messages
   if (!isLoading && Object.values(monitors).every(m => m.value === 0 && !m.timestamp)) {
     return (
-      <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-slate-100 mb-4">Sensor Monitors</h2>
-        <div className="text-slate-400 text-sm">Waiting for OPC UA data...</div>
-        <div className="text-slate-500 text-xs mt-2">
+      <div className="bg-white/90 border border-slate-200 rounded-xl p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-[#1F2937] mb-4">Sensor Monitors</h2>
+        <div className="text-[#4B5563] text-sm">Waiting for OPC UA data...</div>
+        <div className="text-[#9CA3AF] text-xs mt-2">
           Make sure OPC UA source is activated and simulator is running.
         </div>
       </div>
@@ -273,7 +273,7 @@ export const SensorMonitors: React.FC<SensorMonitorsProps> = ({ refreshInterval 
           );
         })}
       </div>
-      <div className="mt-4 text-xs text-slate-500 text-center">
+      <div className="mt-4 text-xs text-[#9CA3AF] text-center">
         Updating every {refreshInterval / 1000}s from OPC UA sources
         {Object.values(monitors).some(m => m.timestamp) && (
           <span className="ml-2">

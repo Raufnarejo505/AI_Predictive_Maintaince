@@ -107,28 +107,28 @@ class OPCUAMQTTGateway:
         """Callback when MQTT client connects."""
         if rc == 0:
             self._mqtt_connected = True
-            logger.info(f"✅ Connected to MQTT broker at {self.mqtt_broker}:{self.mqtt_port}")
+            logger.info(f"Connected to MQTT broker at {self.mqtt_broker}:{self.mqtt_port}")
         else:
             self._mqtt_connected = False
-            logger.error(f"❌ Failed to connect to MQTT broker. Return code: {rc}")
+            logger.error(f"Failed to connect to MQTT broker. Return code: {rc}")
             self.stats["mqtt_errors"] += 1
     
     def _on_mqtt_disconnect(self, client, userdata, rc):
         """Callback when MQTT client disconnects."""
         self._mqtt_connected = False
         if rc != 0:
-            logger.warning(f"⚠️  Unexpected MQTT disconnection. Return code: {rc}")
+            logger.warning(f"Unexpected MQTT disconnection. Return code: {rc}")
     
     async def _connect_opcua(self) -> bool:
         """Establish connection to OPC UA server."""
         try:
-            logger.info(f"🔌 Connecting to OPC UA server: {self.opcua_endpoint}")
+            logger.info(f"Connecting to OPC UA server: {self.opcua_endpoint}")
             self.opcua_client = Client(url=self.opcua_endpoint, timeout=10)
             await self.opcua_client.connect()
-            logger.info("✅ Connected to OPC UA server")
+            logger.info("Connected to OPC UA server")
             return True
         except Exception as e:
-            logger.error(f"❌ Failed to connect to OPC UA server: {e}")
+            logger.error(f"Failed to connect to OPC UA server: {e}")
             self.stats["opcua_errors"] += 1
             return False
     
@@ -143,7 +143,7 @@ class OPCUAMQTTGateway:
                 period=self.sampling_interval_ms,
                 handler=self
             )
-            logger.info(f"📡 Created OPC UA subscription (interval: {self.sampling_interval_ms}ms)")
+            logger.info(f"Created OPC UA subscription (interval: {self.sampling_interval_ms}ms)")
             
             # Define node IDs for Extruder variables
             # Using namespace index 3 (Prosys Simulation Server default)
@@ -164,20 +164,20 @@ class OPCUAMQTTGateway:
                     handle = await self.subscription.subscribe_data_change(node)
                     # Store mapping: handle -> node_name for callback identification
                     self.subscription_handles[str(node.nodeid)] = name
-                    logger.info(f"  ✓ Subscribed to {name} ({node_id})")
+                    logger.info(f"Subscribed to {name} ({node_id})")
                 except Exception as e:
-                    logger.error(f"  ✗ Failed to subscribe to {name} ({node_id}): {e}")
+                    logger.error(f"Failed to subscribe to {name} ({node_id}): {e}")
                     self.stats["opcua_errors"] += 1
             
             if len(self.subscription_handles) > 0:
-                logger.info(f"✅ Successfully subscribed to {len(self.subscription_handles)} nodes")
+                logger.info(f"Successfully subscribed to {len(self.subscription_handles)} nodes")
                 return True
             else:
-                logger.error("❌ No nodes subscribed successfully")
+                logger.error("No nodes subscribed successfully")
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ Failed to set up OPC UA subscriptions: {e}")
+            logger.error(f"Failed to set up OPC UA subscriptions: {e}")
             self.stats["opcua_errors"] += 1
             return False
 
@@ -223,7 +223,7 @@ class OPCUAMQTTGateway:
                 self.sensor_cache[node_name] = val
                 
                 if old_value != val:
-                    logger.debug(f"📊 {node_name}: {old_value} → {val}")
+                    logger.debug(f"{node_name}: {old_value} → {val}")
                 
                 # Publish normalized payload when we have all values
                 if self._should_publish():
@@ -238,12 +238,12 @@ class OPCUAMQTTGateway:
                         if self._publish_task is None or self._publish_task.done():
                             self._publish_task = asyncio.create_task(self._publish_telemetry())
                     except RuntimeError:
-                        logger.warning("⚠️  No event loop available for publishing")
+                        logger.warning("No event loop available for publishing")
             else:
-                logger.warning(f"⚠️  Received data change from unknown node: {node_id_str}")
+                logger.warning(f"Received data change from unknown node: {node_id_str}")
                 
         except Exception as e:
-            logger.error(f"❌ Error processing data change: {e}")
+            logger.error(f"Error processing data change: {e}")
             self.stats["opcua_errors"] += 1
     
     def _should_publish(self) -> bool:
@@ -289,13 +289,13 @@ class OPCUAMQTTGateway:
                 self.stats["messages_published"] += 1
                 self.stats["last_publish_time"] = datetime.now(timezone.utc).isoformat()
                 self._last_publish_monotonic = now_mono
-                logger.info(f"📤 Published to {topic}: profile={payload.get('profile')}, temp={payload.get('temperature')}°C")
+                logger.info(f"Published to {topic}: profile={payload.get('profile')}, temp={payload.get('temperature')}°C")
             else:
-                logger.error(f"❌ Failed to publish to MQTT. Return code: {result.rc}")
+                logger.error(f"Failed to publish to MQTT. Return code: {result.rc}")
                 self.stats["mqtt_errors"] += 1
                 
         except Exception as e:
-            logger.error(f"❌ Error publishing telemetry: {e}")
+            logger.error(f"Error publishing telemetry: {e}")
             self.stats["mqtt_errors"] += 1
     
     def _normalize_payload(self) -> Optional[Dict[str, Any]]:
@@ -340,13 +340,13 @@ class OPCUAMQTTGateway:
     async def _connect_mqtt(self) -> bool:
         """Connect to MQTT broker."""
         try:
-            logger.info(f"🔌 Connecting to MQTT broker: {self.mqtt_broker}:{self.mqtt_port}")
+            logger.info(f"Connecting to MQTT broker: {self.mqtt_broker}:{self.mqtt_port}")
             self.mqtt_client.connect(self.mqtt_broker, self.mqtt_port, keepalive=60)
             self.mqtt_client.loop_start()
             await asyncio.sleep(1)  # Give MQTT time to connect
-            return self._mqtt_connected
+            return self.mqtt_client.is_connected()
         except Exception as e:
-            logger.error(f"❌ Failed to connect to MQTT broker: {e}")
+            logger.error(f"Failed to connect to MQTT broker: {e}")
             self.stats["mqtt_errors"] += 1
             return False
     
@@ -358,22 +358,22 @@ class OPCUAMQTTGateway:
                     self.reconnect_delay = 5  # Reset delay on success
                     return
             else:
-                logger.warning(f"⏳ Retrying OPC UA connection in {self.reconnect_delay}s...")
+                logger.warning(f"Retrying OPC UA connection in {self.reconnect_delay}s...")
                 await asyncio.sleep(self.reconnect_delay)
                 self.reconnect_delay = min(self.reconnect_delay * 2, 60)  # Max 60s
     
     async def start(self):
         """Start the gateway service."""
         self.running = True
-        logger.info("🚀 Starting OPC UA → MQTT Gateway")
-        logger.info(f"   OPC UA Endpoint: {self.opcua_endpoint}")
-        logger.info(f"   MQTT Broker: {self.mqtt_broker}:{self.mqtt_port}")
-        logger.info(f"   Machine ID: {self.machine_id}")
-        logger.info(f"   Sampling Interval: {self.sampling_interval_ms}ms")
+        logger.info("Starting OPC UA to MQTT Gateway")
+        logger.info(f"OPCUA Endpoint: {self.opcua_endpoint}")
+        logger.info(f"MQTT Broker: {self.mqtt_broker}:{self.mqtt_port}")
+        logger.info(f"Machine ID: {self.machine_id}")
+        logger.info(f"Sampling Interval: {self.sampling_interval_ms}ms")
         
         # Connect to MQTT first
         if not await self._connect_mqtt():
-            logger.error("❌ Failed to connect to MQTT broker. Exiting.")
+            logger.error("Failed to connect to MQTT broker. Exiting.")
             return
         
         # Connect to OPC UA and set up subscriptions
@@ -383,40 +383,40 @@ class OPCUAMQTTGateway:
         try:
             while self.running:
                 # Check OPC UA connection health
-                if not self._opcua_connected():
-                    logger.warning("⚠️  OPC UA connection lost. Reconnecting...")
+                if not self.opcua_client or not self.opcua_client.is_connected():
+                    logger.warning("OPC UA connection lost. Reconnecting...")
                     await self._reconnect_opcua()
                 
                 # Check MQTT connection health
-                if not self._mqtt_connected:
-                    logger.warning("⚠️  MQTT connection lost. Reconnecting...")
+                if not self.mqtt_client.is_connected():
+                    logger.warning("MQTT connection lost. Reconnecting...")
                     await self._connect_mqtt()
                 
                 # Log stats periodically
                 await asyncio.sleep(30)
                 logger.info(
-                    f"📊 Stats: Published={self.stats['messages_published']}, "
+                    f"Stats: Published={self.stats['messages_published']}, "
                     f"OPCUA Errors={self.stats['opcua_errors']}, "
                     f"MQTT Errors={self.stats['mqtt_errors']}"
                 )
                 
         except asyncio.CancelledError:
-            logger.info("🛑 Gateway service cancelled")
+            logger.info("Gateway service cancelled")
         except Exception as e:
-            logger.error(f"❌ Fatal error in gateway loop: {e}")
+            logger.error(f"Fatal error in gateway loop: {e}")
         finally:
             await self.stop()
     
     async def stop(self):
         """Stop the gateway service gracefully."""
-        logger.info("🛑 Stopping OPC UA → MQTT Gateway...")
+        logger.info("Stopping OPC UA to MQTT Gateway...")
         self.running = False
         
         # Unsubscribe from OPC UA
         if self.subscription:
             try:
                 await self.subscription.delete()
-                logger.info("✅ OPC UA subscription deleted")
+                logger.info("OPC UA subscription deleted")
             except Exception as e:
                 logger.error(f"Error deleting subscription: {e}")
         
@@ -424,7 +424,7 @@ class OPCUAMQTTGateway:
         if self.opcua_client:
             try:
                 await self.opcua_client.disconnect()
-                logger.info("✅ OPC UA client disconnected")
+                logger.info("OPC UA client disconnected")
             except Exception as e:
                 logger.error(f"Error disconnecting OPC UA client: {e}")
         
@@ -433,11 +433,11 @@ class OPCUAMQTTGateway:
             try:
                 self.mqtt_client.loop_stop()
                 self.mqtt_client.disconnect()
-                logger.info("✅ MQTT client disconnected")
+                logger.info("MQTT client disconnected")
             except Exception as e:
                 logger.error(f"Error disconnecting MQTT client: {e}")
         
-        logger.info("✅ Gateway stopped")
+        logger.info("Gateway stopped")
 
 
 async def main():
@@ -464,7 +464,7 @@ async def main():
     
     # Handle graceful shutdown
     def signal_handler(sig, frame):
-        logger.info("🛑 Received shutdown signal")
+        logger.info("Received shutdown signal")
         asyncio.create_task(gateway.stop())
     
     signal.signal(signal.SIGINT, signal_handler)
@@ -474,7 +474,7 @@ async def main():
     try:
         await gateway.start()
     except KeyboardInterrupt:
-        logger.info("🛑 Keyboard interrupt received")
+        logger.info("Keyboard interrupt received")
     finally:
         await gateway.stop()
 
