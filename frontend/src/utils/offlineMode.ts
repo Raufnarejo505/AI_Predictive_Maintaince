@@ -5,7 +5,7 @@
  */
 
 // Service health status
-interface ServiceStatus {
+export interface ServiceStatus {
     backend: boolean;
     ai: boolean;
     mqtt: boolean;

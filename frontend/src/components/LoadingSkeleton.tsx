@@ -1,4 +1,5 @@
 import React from "react";
+import { useT } from "../i18n/I18nProvider";
 
 /**
  * Loading skeleton components for better UX during page transitions
@@ -49,9 +50,10 @@ export function ListSkeleton() {
 }
 
 export function ChartSkeleton() {
+    const t = useT();
     return (
         <div className="h-72 bg-slate-800 rounded-2xl animate-pulse flex items-center justify-center">
-            <div className="text-slate-500">Loading chart...</div>
+            <div className="text-slate-500">{t("charts.loadingChart")}</div>
         </div>
     );
 }

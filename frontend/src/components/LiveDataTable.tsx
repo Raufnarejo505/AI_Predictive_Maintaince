@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { safeApi } from '../api/safeApi';
+import { useT } from '../i18n/I18nProvider';
 
 interface LiveDataRow {
   timestamp: string;
@@ -11,6 +12,7 @@ interface LiveDataRow {
 }
 
 export const LiveDataTable: React.FC = () => {
+  const t = useT();
   const [data, setData] = useState<LiveDataRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFallback, setIsFallback] = useState(false);
@@ -95,7 +97,7 @@ export const LiveDataTable: React.FC = () => {
           .map((entry) => {
             const pred = entry.prediction || {};
             return {
-              timestamp: entry.timestamp.toLocaleTimeString('en-US', {
+              timestamp: entry.timestamp.toLocaleTimeString('de-DE', {
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit',
@@ -103,9 +105,9 @@ export const LiveDataTable: React.FC = () => {
               temperature: entry.sensors.temperature?.value || 0,
               vibration: entry.sensors.vibration?.value || 0,
               anomaly: pred.score || pred.confidence || 0,
-              prediction: pred.prediction === 'anomaly' ? 'Anomaly' : 
-                         pred.status === 'warning' ? 'Warning' : 
-                         pred.status === 'critical' ? 'Critical' : 'Healthy',
+              prediction: pred.prediction === 'anomaly' ? t('liveData.predictionAnomaly') : 
+                         pred.status === 'warning' ? t('liveData.predictionWarning') : 
+                         pred.status === 'critical' ? t('liveData.predictionCritical') : t('liveData.predictionHealthy'),
               machine: entry.machine,
             };
           });
@@ -128,8 +130,8 @@ export const LiveDataTable: React.FC = () => {
   if (isLoading) {
     return (
       <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-slate-100 mb-4">Live Sensor Data</h2>
-        <div className="text-slate-400 text-sm">Loading...</div>
+        <h2 className="text-lg font-semibold text-slate-100 mb-4">{t('liveData.title')}</h2>
+        <div className="text-slate-400 text-sm">{t('common.loading')}</div>
       </div>
     );
   }
@@ -137,24 +139,24 @@ export const LiveDataTable: React.FC = () => {
   if (isFallback) {
     return (
       <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-slate-100 mb-4">Live Sensor Data</h2>
-        <div className="text-slate-400 text-sm">No live data available (Backend offline)</div>
+        <h2 className="text-lg font-semibold text-slate-100 mb-4">{t('liveData.title')}</h2>
+        <div className="text-slate-400 text-sm">{t('liveData.noLiveDataOffline')}</div>
       </div>
     );
   }
 
   return (
     <div className="bg-slate-900/80 border border-slate-700/50 rounded-xl p-6">
-      <h2 className="text-lg font-semibold text-slate-100 mb-4">Live Sensor Data</h2>
+      <h2 className="text-lg font-semibold text-slate-100 mb-4">{t('liveData.title')}</h2>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-700/50">
-              <th className="text-left py-2 px-3 text-slate-400 font-medium">Timestamp</th>
-              <th className="text-left py-2 px-3 text-slate-400 font-medium">Temperature</th>
-              <th className="text-left py-2 px-3 text-slate-400 font-medium">Vibration</th>
-              <th className="text-left py-2 px-3 text-slate-400 font-medium">Anomaly</th>
-              <th className="text-left py-2 px-3 text-slate-400 font-medium">Prediction</th>
+              <th className="text-left py-2 px-3 text-slate-400 font-medium">{t('liveData.timestamp')}</th>
+              <th className="text-left py-2 px-3 text-slate-400 font-medium">{t('liveData.temperature')}</th>
+              <th className="text-left py-2 px-3 text-slate-400 font-medium">{t('liveData.vibration')}</th>
+              <th className="text-left py-2 px-3 text-slate-400 font-medium">{t('liveData.anomaly')}</th>
+              <th className="text-left py-2 px-3 text-slate-400 font-medium">{t('liveData.prediction')}</th>
             </tr>
           </thead>
           <tbody>
@@ -182,7 +184,7 @@ export const LiveDataTable: React.FC = () => {
             ) : (
               <tr>
                 <td colSpan={5} className="py-4 text-center text-slate-400">
-                  No data available
+                  {t('liveData.noData')}
                 </td>
               </tr>
             )}

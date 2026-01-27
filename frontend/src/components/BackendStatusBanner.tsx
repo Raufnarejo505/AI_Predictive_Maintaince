@@ -1,20 +1,22 @@
 import React from 'react';
 import { useBackendStore } from '../store/backendStore';
+import { useT } from '../i18n/I18nProvider';
 
 export const BackendStatusBanner: React.FC = () => {
   const status = useBackendStore((state) => state.status);
   const lastCheck = useBackendStore((state) => state.lastCheck);
+  const t = useT();
   
   if (status === 'online' || status === 'checking') {
     return null;
   }
   
   const formatTime = (date: Date | null) => {
-    if (!date) return 'Never';
+    if (!date) return t('time.never');
     const secondsAgo = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (secondsAgo < 60) return `${secondsAgo}s ago`;
+    if (secondsAgo < 60) return `${secondsAgo}${t('time.secondsAgo')}`;
     const minutesAgo = Math.floor(secondsAgo / 60);
-    return `${minutesAgo}m ago`;
+    return `${minutesAgo}${t('time.minutesAgo')}`;
   };
   
   return (
@@ -24,16 +26,16 @@ export const BackendStatusBanner: React.FC = () => {
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-amber-200 rounded-full animate-pulse" />
             <span className="text-sm font-medium text-amber-50">
-              Backend Offline - Showing fallback data
+              {t('banners.backendOfflineFallback')}
             </span>
             {lastCheck && (
               <span className="text-xs text-amber-200/80">
-                (Last check: {formatTime(lastCheck)})
+                ({t('time.lastCheck')}: {formatTime(lastCheck)})
               </span>
             )}
           </div>
           <div className="text-xs text-amber-200/80">
-            Auto-recovery enabled
+            {t('banners.autoRecoveryEnabled')}
           </div>
         </div>
       </div>

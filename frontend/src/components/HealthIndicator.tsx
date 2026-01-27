@@ -1,8 +1,10 @@
 import React from 'react';
 import { useBackendStore } from '../store/backendStore';
+import { useT } from '../i18n/I18nProvider';
 
 export const HealthIndicator: React.FC = () => {
   const status = useBackendStore((state) => state.status);
+  const t = useT();
   
   const getStatusColor = () => {
     switch (status) {
@@ -20,13 +22,13 @@ export const HealthIndicator: React.FC = () => {
   const getStatusText = () => {
     switch (status) {
       case 'online':
-        return 'Online';
+        return t('status.connected');
       case 'offline':
-        return 'Offline';
+        return t('status.disconnected');
       case 'checking':
-        return 'Checking...';
+        return t('offline.checkingServices');
       default:
-        return 'Unknown';
+        return t('status.unknown');
     }
   };
   

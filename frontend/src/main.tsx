@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import "./styles.css";
 import { useBackendStore } from "./store/backendStore";
+import { I18nProvider } from "./i18n/I18nProvider";
+import { getInitialLanguage, tRaw } from "./i18n";
 
 // Create QueryClient at the TOP LEVEL - before any components
 const queryClient = new QueryClient({
@@ -36,6 +38,7 @@ class ErrorBoundary extends React.Component<
 
   render() {
     if (this.state.hasError) {
+      const lang = getInitialLanguage();
       return (
         <div style={{ 
           padding: "40px", 
@@ -47,11 +50,11 @@ class ErrorBoundary extends React.Component<
           alignItems: "center",
           justifyContent: "center"
         }}>
-          <h1 style={{ color: "#ef4444", marginBottom: "20px" }}>Application Error</h1>
-          <p style={{ marginBottom: "10px" }}>Something went wrong. Please refresh the page.</p>
+          <h1 style={{ color: "#ef4444", marginBottom: "20px" }}>{tRaw(lang, "errors.appErrorTitle")}</h1>
+          <p style={{ marginBottom: "10px" }}>{tRaw(lang, "errors.appErrorMessage")}</p>
           {this.state.error && (
             <details style={{ marginTop: "20px", maxWidth: "600px" }}>
-              <summary style={{ cursor: "pointer", color: "#94a3b8" }}>Error Details</summary>
+              <summary style={{ cursor: "pointer", color: "#94a3b8" }}>{tRaw(lang, "errors.errorDetails")}</summary>
               <pre style={{ 
                 background: "#1e293b", 
                 padding: "15px", 
@@ -83,7 +86,7 @@ class ErrorBoundary extends React.Component<
               fontSize: "16px"
             }}
           >
-            Refresh Page
+            {tRaw(lang, "errors.refreshPage")}
           </button>
         </div>
       );
@@ -95,7 +98,8 @@ class ErrorBoundary extends React.Component<
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {
-  throw new Error("Root element not found");
+  const lang = getInitialLanguage();
+  throw new Error(tRaw(lang, "errors.rootNotFound"));
 }
 
 // Start backend health checker
@@ -104,9 +108,11 @@ useBackendStore.getState().startHealthCheck();
 // QueryClientProvider MUST be at the root level
 ReactDOM.createRoot(rootElement).render(
   <QueryClientProvider client={queryClient}>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
+    <I18nProvider>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </I18nProvider>
   </QueryClientProvider>
 );
 

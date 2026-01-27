@@ -139,7 +139,7 @@ export default function ReportsPage() {
         if (format === "csv") {
             return `Machine,Timestamp,Value,Status\n${machineName},${dateFrom.toISOString()},75.5,Normal\n${machineName},${now.toISOString()},82.3,Warning`;
         } else if (format === "pdf") {
-            return `Predictive Maintenance Report\n\nMachine: ${machineName}\nDate Range: ${dateFrom.toISOString()} to ${now.toISOString()}\n\nSummary:\n- Total Readings: 150\n- Alarms: 5\n- Predictions: 23`;
+            return `PREDIKTIVE INSTANDHALTUNG Bericht\n\nMachine: ${machineName}\nDate Range: ${dateFrom.toISOString()} to ${now.toISOString()}\n\nSummary:\n- Total Readings: 150\n- Alarms: 5\n- Predictions: 23`;
         } else if (format === "xlsx") {
             return `Machine,Timestamp,Value,Status\n${machineName},${dateFrom.toISOString()},75.5,Normal\n${machineName},${now.toISOString()},82.3,Warning`;
         }

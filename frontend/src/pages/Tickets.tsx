@@ -9,8 +9,10 @@ import { useErrorToast } from "../components/ErrorToast";
 import { StatusBadge } from "../components/StatusBadge";
 import { formatDateTime } from "../utils/formatters";
 import { TicketModal } from "../components/TicketModal";
+import { useT } from "../i18n/I18nProvider";
 
 export default function TicketsPage() {
+    const t = useT();
     const { showError, ErrorComponent } = useErrorToast();
     const queryClient = useQueryClient();
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -38,10 +40,10 @@ export default function TicketsPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["tickets"] });
             setShowCreateModal(false);
-            showError("✅ Ticket created successfully!");
+            showError(t("tickets.toast.created"));
         },
         onError: (error: any) => {
-            showError(`❌ Failed to create ticket: ${error.response?.data?.detail || error.message}`);
+            showError(`${t("tickets.toast.createFailed")} ${error.response?.data?.detail || error.message}`);
         },
     });
 
@@ -52,10 +54,10 @@ export default function TicketsPage() {
             queryClient.invalidateQueries({ queryKey: ["tickets"] });
             setIsEditing(false);
             setSelectedTicket(null);
-            showError("✅ Ticket updated successfully!");
+            showError(t("tickets.toast.updated"));
         },
         onError: (error: any) => {
-            showError(`❌ Failed to update ticket: ${error.response?.data?.detail || error.message}`);
+            showError(`${t("tickets.toast.updateFailed")} ${error.response?.data?.detail || error.message}`);
         },
     });
 
@@ -63,14 +65,14 @@ export default function TicketsPage() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-100">Tickets</h1>
-                    <p className="text-slate-400 mt-1">Manage maintenance tickets</p>
+                    <h1 className="text-3xl font-bold text-slate-100">{t("tickets.title")}</h1>
+                    <p className="text-slate-400 mt-1">{t("tickets.subtitle")}</p>
                 </div>
                 <button
                     onClick={() => setShowCreateModal(true)}
                     className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
                 >
-                    + Create Ticket
+                    {t("tickets.create")}
                 </button>
             </div>
 
@@ -109,7 +111,7 @@ export default function TicketsPage() {
                                         }}
                                         className="px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors"
                                     >
-                                        Edit
+                                        {t("common.edit")}
                                     </button>
                                 </div>
                             </div>
@@ -120,7 +122,7 @@ export default function TicketsPage() {
 
             {tickets.length === 0 && !isLoading && (
                 <div className="text-center py-12 text-slate-400">
-                    <p>No tickets found. Create your first ticket to get started.</p>
+                    <p>{t("tickets.empty")}</p>
                 </div>
             )}
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { CircleMeter } from './CircleMeter';
+ import { useT } from '../i18n/I18nProvider';
 
 interface SensorMonitor {
   name: string;
@@ -16,12 +17,13 @@ interface SensorMonitorsProps {
 }
 
 export const SensorMonitors: React.FC<SensorMonitorsProps> = ({ refreshInterval = 2000 }) => {
+  const t = useT();
   const [monitors, setMonitors] = useState<Record<string, SensorMonitor>>({
-    temperature: { name: 'Temperature', value: 0, unit: '°C', status: 'normal', timestamp: '' },
-    vibration: { name: 'Vibration', value: 0, unit: 'mm/s RMS', status: 'normal', timestamp: '' },
-    pressure: { name: 'Pressure', value: 0, unit: 'bar', status: 'normal', timestamp: '' },
-    motor_current: { name: 'Motor Current', value: 0, unit: 'A', status: 'normal', timestamp: '' },
-    wear_index: { name: 'Wear Index', value: 0, unit: '', status: 'normal', timestamp: '' },
+    temperature: { name: t('sensorMonitors.metrics.temperature'), value: 0, unit: '°C', status: 'normal', timestamp: '' },
+    vibration: { name: t('sensorMonitors.metrics.vibration'), value: 0, unit: 'mm/s RMS', status: 'normal', timestamp: '' },
+    pressure: { name: t('sensorMonitors.metrics.pressure'), value: 0, unit: 'bar', status: 'normal', timestamp: '' },
+    motor_current: { name: t('sensorMonitors.metrics.motorCurrent'), value: 0, unit: 'A', status: 'normal', timestamp: '' },
+    wear_index: { name: t('sensorMonitors.metrics.wearIndex'), value: 0, unit: '', status: 'normal', timestamp: '' },
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isFallback, setIsFallback] = useState(false);
@@ -202,11 +204,11 @@ export const SensorMonitors: React.FC<SensorMonitorsProps> = ({ refreshInterval 
   const getStatusIndicator = (status: string) => {
     switch (status) {
       case 'critical':
-        return 'Critical';
+        return t('sensorMonitors.indicatorCritical');
       case 'warning':
-        return 'Warning';
+        return t('sensorMonitors.indicatorWarning');
       default:
-        return 'Healthy';
+        return t('sensorMonitors.indicatorHealthy');
     }
   };
 
@@ -224,13 +226,15 @@ export const SensorMonitors: React.FC<SensorMonitorsProps> = ({ refreshInterval 
   }
 
   // If no data, show empty state without error messages
-  if (!isLoading && Object.values(monitors).every(m => m.value === 0 && !m.timestamp)) {
+  const monitorValues = Object.values(monitors) as SensorMonitor[];
+
+  if (!isLoading && monitorValues.every((m) => m.value === 0 && !m.timestamp)) {
     return (
       <div className="bg-white/90 border border-slate-200 rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-[#1F2937] mb-4">Sensor Monitors</h2>
-        <div className="text-[#4B5563] text-sm">Waiting for OPC UA data...</div>
+        <h2 className="text-lg font-semibold text-[#1F2937] mb-4">{t('sensorMonitors.liveTitle')}</h2>
+        <div className="text-[#4B5563] text-sm">{t('sensorMonitors.waitingForOpcua')}</div>
         <div className="text-[#9CA3AF] text-xs mt-2">
-          Make sure OPC UA source is activated and simulator is running.
+          {t('sensorMonitors.opcuaHint')}
         </div>
       </div>
     );
@@ -257,7 +261,7 @@ export const SensorMonitors: React.FC<SensorMonitorsProps> = ({ refreshInterval 
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {Object.entries(monitors).map(([key, monitor]) => {
+        {(Object.entries(monitors) as Array<[string, SensorMonitor]>).map(([key, monitor]) => {
           const { min, max } = getMinMax(monitor.name);
           return (
             <CircleMeter
@@ -274,10 +278,10 @@ export const SensorMonitors: React.FC<SensorMonitorsProps> = ({ refreshInterval 
         })}
       </div>
       <div className="mt-4 text-xs text-[#9CA3AF] text-center">
-        Updating every {refreshInterval / 1000}s from OPC UA sources
-        {Object.values(monitors).some(m => m.timestamp) && (
+        {t('sensorMonitors.updatingEveryPrefix')} {refreshInterval / 1000}s {t('sensorMonitors.updatingEverySuffix')}
+        {monitorValues.some((m) => m.timestamp) && (
           <span className="ml-2">
-            • Last update: {new Date(Math.max(...Object.values(monitors).filter(m => m.timestamp).map(m => new Date(m.timestamp).getTime()))).toLocaleTimeString()}
+            • {t('sensorMonitors.lastUpdate')} {new Date(Math.max(...monitorValues.filter((m) => m.timestamp).map((m) => new Date(m.timestamp).getTime()))).toLocaleTimeString('de-DE')}
           </span>
         )}
       </div>

@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api";
+import { useT } from "../i18n/I18nProvider";
 
 export default function Register() {
+    const t = useT();
     const [email, setEmail] = useState("");
     const [fullName, setFullName] = useState("");
     const [password, setPassword] = useState("");
@@ -25,13 +27,13 @@ export default function Register() {
                 full_name: fullName || undefined,
                 role: "viewer",
             });
-            setSuccess("Account created successfully. You can now sign in.");
+            setSuccess(t("auth.accountCreated"));
             setTimeout(() => navigate("/login"), 1200);
         } catch (err: any) {
             const message =
                 err.response?.data?.detail ||
                 err.message ||
-                "Failed to create account. Please try again.";
+                t("auth.accountCreateFailed");
             setError(message);
         } finally {
             setIsLoading(false);
@@ -43,14 +45,14 @@ export default function Register() {
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2">
-                        Predictive Maintenance
+                        {t("app.name")}
                     </h1>
-                    <p className="text-slate-400 text-sm">Create a new account</p>
+                    <p className="text-slate-400 text-sm">{t("auth.createNewAccount")}</p>
                 </div>
 
                 <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
                     <h2 className="text-2xl font-semibold text-slate-100 mb-6 text-center">
-                        Sign Up
+                        {t("auth.signUp")}
                     </h2>
 
                     {error && (
@@ -67,21 +69,21 @@ export default function Register() {
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
                             <label className="block text-sm font-medium text-slate-300 mb-2">
-                                Full Name
+                                {t("auth.fullName")}
                             </label>
                             <input
                                 type="text"
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
                                 className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
-                                placeholder="Your name"
+                                placeholder={t("auth.yourName")}
                                 disabled={isLoading}
                             />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-slate-300 mb-2">
-                                Email Address
+                                {t("auth.emailAddress")}
                             </label>
                             <input
                                 type="email"
@@ -96,14 +98,14 @@ export default function Register() {
 
                         <div>
                             <label className="block text-sm font-medium text-slate-300 mb-2">
-                                Password
+                                {t("auth.password")}
                             </label>
                             <input
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
-                                placeholder="Choose a password"
+                                placeholder={t("auth.choosePassword")}
                                 required
                                 minLength={3}
                                 disabled={isLoading}
@@ -115,14 +117,14 @@ export default function Register() {
                             disabled={isLoading}
                             className="w-full py-3 px-4 bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 text-slate-900 font-semibold rounded-xl shadow-lg shadow-emerald-500/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {isLoading ? "Creating account..." : "Create Account"}
+                            {isLoading ? t("auth.creatingAccount") : t("auth.createAccount")}
                         </button>
                     </form>
 
                     <p className="mt-6 text-center text-sm text-slate-400">
-                        Already have an account?{" "}
+                        {t("auth.alreadyHaveAccount")}{" "}
                         <Link to="/login" className="text-emerald-400 hover:text-emerald-300 font-medium">
-                            Sign in
+                            {t("auth.signInLink")}
                         </Link>
                     </p>
                 </div>

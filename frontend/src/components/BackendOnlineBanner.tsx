@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useBackendStore } from '../store/backendStore';
+import { useT } from '../i18n/I18nProvider';
 
 export const BackendOnlineBanner: React.FC = () => {
   const status = useBackendStore((state) => state.status);
   const [show, setShow] = useState(false);
   const [wasOffline, setWasOffline] = useState(false);
+  const t = useT();
 
   useEffect(() => {
     if (status === 'online' && wasOffline) {
@@ -30,7 +32,7 @@ export const BackendOnlineBanner: React.FC = () => {
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-200 rounded-full animate-pulse" />
             <span className="text-sm font-medium text-green-50">
-              Backend Online — Live data streaming
+              {t('banners.backendOnlineLive')}
             </span>
           </div>
           <button

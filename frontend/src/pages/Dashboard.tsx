@@ -7,12 +7,14 @@ import { BackendOnlineBanner } from '../components/BackendOnlineBanner';
 import { LiveDataTable } from '../components/LiveDataTable';
 import { SensorMonitors } from '../components/SensorMonitors';
 import { useOPCUAStatus } from '../hooks/useLiveData';
+ import { useT } from '../i18n/I18nProvider';
 
 const gradientClass = "min-h-screen bg-[#f7f5ff] text-slate-900";
 const REFRESH_INTERVAL = 3000; // 3 seconds to show OPC UA changes quickly
 const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
 
  export default function Dashboard() {
+  const t = useT();
   const [overview, setOverview] = useState<any>(null);
   const [predictions, setPredictions] = useState<any[]>([]);
   const [aiStatus, setAiStatus] = useState<any>(null);
@@ -196,10 +198,10 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
         {/* Top Header Section */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">
-            PREDICTIVE MAINTENANCE Operations Command Center
+            {t('dashboard.headerTitle')}
           </h1>
           <p className="text-slate-600 text-sm mb-4">
-            Real-time health, AI anomaly predictions, alarms, and automation from a single cockpit.
+            {t('dashboard.headerSubtitle')}
           </p>
           
           {/* Status Cards Row */}
@@ -268,7 +270,7 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
         
         {/* Sensor Monitors - Live OPC UA Values with Circle Meters */}
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">Live Sensor Monitors</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-4">{t('sensorMonitors.liveTitle')}</h2>
           <SensorMonitors refreshInterval={2000} />
         </div>
 
@@ -277,7 +279,7 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
           {/* AI PREDICTIONS - Purple */}
           <div className="bg-white/90 rounded-xl p-6 border border-purple-200 shadow-sm relative overflow-hidden">
             <div className="relative z-10">
-              <div className="text-sm font-medium text-slate-500 mb-2">AI PREDICTIONS</div>
+              <div className="text-sm font-medium text-slate-500 mb-2">{t('dashboard.kpiAiPredictions')}</div>
               <div className="text-5xl font-bold text-slate-900 mb-2">
                 {isFallback ? '--' : (predictions?.length || overview?.predictions?.last_24h || 0)}
               </div>
@@ -285,14 +287,14 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
                 {!isFallback && predictions.length > 0 && (
                   <>
                     <span className="bg-purple-50 text-purple-800 px-3 py-1 rounded text-sm font-medium border border-purple-200">
-                      {anomaliesCount} anomalies
+                      {anomaliesCount} {t('dashboard.kpiAnomalies')}
                     </span>
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
                       anomaliesCount > 2 ? 'bg-rose-50 text-rose-700 border border-rose-200' :
                       anomaliesCount > 0 ? 'bg-amber-50 text-amber-800 border border-amber-200' :
                       'bg-emerald-50 text-emerald-700 border border-emerald-200'
                     }`}>
-                      {anomaliesCount > 2 ? 'Critical' : anomaliesCount > 0 ? 'Early anomaly' : 'Normal'}
+                      {anomaliesCount > 2 ? t('dashboard.kpiStatusCritical') : anomaliesCount > 0 ? t('dashboard.kpiStatusEarlyAnomaly') : t('dashboard.kpiStatusNormal')}
                     </span>
                   </>
                 )}
@@ -324,7 +326,7 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
           {/* ANOMALIES FOUND - Orange/Yellow */}
           <div className="bg-white/90 rounded-xl p-6 border border-amber-200 shadow-sm relative overflow-hidden">
             <div className="relative z-10">
-              <div className="text-sm font-medium text-slate-500 mb-2">ANOMALIES FOUND</div>
+              <div className="text-sm font-medium text-slate-500 mb-2">{t('dashboard.kpiAnomaliesFound')}</div>
               <div className="text-5xl font-bold text-slate-900 mb-2">
                 {isFallback ? '--' : (anomaliesCount || overview?.alarms?.active || 0)}
               </div>
@@ -332,7 +334,7 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
                 {!isFallback && (
                   <>
                     <span className="bg-amber-50 text-amber-900 px-3 py-1 rounded text-sm font-medium border border-amber-200">
-                      {anomaliesCount > 0 ? 'Action required' : 'All clear'}
+                      {anomaliesCount > 0 ? t('dashboard.kpiActionRequired') : t('dashboard.kpiAllClear')}
                     </span>
                     {predictions.length > 0 && (
                       <span className="text-xs text-slate-500">
@@ -369,12 +371,12 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
           {/* MACHINES - Green */}
           <div className="bg-white/90 rounded-xl p-6 border border-emerald-200 shadow-sm relative overflow-hidden">
             <div className="relative z-10">
-              <div className="text-sm font-medium text-slate-500 mb-2">MACHINES</div>
+              <div className="text-sm font-medium text-slate-500 mb-2">{t('dashboard.kpiMachines')}</div>
               <div className="text-5xl font-bold text-slate-900 mb-2">
                 {isFallback ? '--' : (overview?.machines?.total || 0)}
               </div>
               <div className="text-slate-600 text-sm mb-4">
-                {isFallback ? '--' : (overview?.machines?.online || 0)} {isFallback ? '' : 'online'}
+                {isFallback ? '--' : (overview?.machines?.online || 0)} {isFallback ? '' : t('dashboard.kpiOnline')}
               </div>
               {/* Waveform graph */}
               <div className="h-16 mt-4 opacity-50">
@@ -400,13 +402,15 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
           {/* ACTIVE ALARMS - Red */}
           <div className="bg-white/90 rounded-xl p-6 border border-rose-200 shadow-sm relative overflow-hidden">
             <div className="relative z-10">
-              <div className="text-sm font-medium text-slate-500 mb-2">ACTIVE ALARMS</div>
+              <div className="text-sm font-medium text-slate-500 mb-2">{t('dashboard.kpiActiveAlarms')}</div>
               <div className="text-5xl font-bold text-slate-900 mb-2">
                 {isFallback ? '--' : (overview?.alarms?.active || 0)}
               </div>
               <div className="flex items-center gap-2 mb-4">
                 <span className="bg-rose-50 text-rose-800 px-3 py-1 rounded text-sm font-medium border border-rose-200">
-                  {isFallback ? 'No live data' : (overview?.alarms?.active === 0 ? 'All clear' : 'Active')}
+                  {isFallback
+                    ? t('dashboard.kpiNoLiveData')
+                    : (overview?.alarms?.active === 0 ? t('dashboard.kpiAllClear') : t('dashboard.kpiActive'))}
                 </span>
                 {isFallback && (
                   <span className="text-xs text-slate-500">(Offline)</span>
@@ -438,7 +442,7 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Machine Health */}
           <div className="bg-white/90 border border-slate-200 rounded-xl p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Machine Health</h2>
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">{t('dashboard.machineHealthTitle')}</h2>
             {overview?.machines?.total > 0 ? (
               <div className="text-slate-600">
                 {overview.machines.total} machines monitored
@@ -483,7 +487,7 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
             ) : (
               <>
                 <div className="mb-2">
-                  <div className="text-xs text-slate-500 mb-1">MACHINE HEALTH SCORE</div>
+                  <div className="text-xs text-slate-500 mb-1">{t('dashboard.machineHealthScoreLabel')}</div>
                   <div className="flex items-center gap-2">
                     <span className="text-4xl font-bold text-slate-900">
                       {predictionsStats?.total ? Math.round(85 + (predictionsStats.total % 10)) : 84}%

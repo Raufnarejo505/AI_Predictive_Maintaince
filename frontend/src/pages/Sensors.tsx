@@ -7,8 +7,10 @@ import { CardSkeleton, ListSkeleton } from "../components/LoadingSkeleton";
 import { useErrorToast } from "../components/ErrorToast";
 import { formatDateTime } from "../utils/formatters";
 import { SensorModal } from "../components/SensorModal";
+import { useT } from "../i18n/I18nProvider";
 
 export default function SensorsPage() {
+    const t = useT();
     const { showError, ErrorComponent } = useErrorToast();
     const queryClient = useQueryClient();
     const [selectedMachine, setSelectedMachine] = useState<string>("all");
@@ -32,10 +34,10 @@ export default function SensorsPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["sensors"] });
             setShowCreateModal(false);
-            showError("✅ Sensor created successfully!");
+            showError(t("sensors.toast.created"));
         },
         onError: (error: any) => {
-            showError(`❌ Failed to create sensor: ${error.response?.data?.detail || error.message}`);
+            showError(`${t("sensors.toast.createFailed")} ${error.response?.data?.detail || error.message}`);
         },
     });
 
@@ -46,10 +48,10 @@ export default function SensorsPage() {
             queryClient.invalidateQueries({ queryKey: ["sensors"] });
             setIsEditing(false);
             setSelectedSensor(null);
-            showError("✅ Sensor updated successfully!");
+            showError(t("sensors.toast.updated"));
         },
         onError: (error: any) => {
-            showError(`❌ Failed to update sensor: ${error.response?.data?.detail || error.message}`);
+            showError(`${t("sensors.toast.updateFailed")} ${error.response?.data?.detail || error.message}`);
         },
     });
 
@@ -57,10 +59,10 @@ export default function SensorsPage() {
         mutationFn: (id: string) => sensorsApi.delete(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["sensors"] });
-            showError("✅ Sensor deleted successfully!");
+            showError(t("sensors.toast.deleted"));
         },
         onError: (error: any) => {
-            showError(`❌ Failed to delete sensor: ${error.response?.data?.detail || error.message}`);
+            showError(`${t("sensors.toast.deleteFailed")} ${error.response?.data?.detail || error.message}`);
         },
     });
 
@@ -68,8 +70,8 @@ export default function SensorsPage() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-100">Sensors</h1>
-                    <p className="text-slate-400 mt-1">Monitor and manage all sensors</p>
+                    <h1 className="text-3xl font-bold text-slate-100">{t("sensors.title")}</h1>
+                    <p className="text-slate-400 mt-1">{t("sensors.subtitle")}</p>
                 </div>
                 <div className="flex gap-3">
                     <select
@@ -77,7 +79,7 @@ export default function SensorsPage() {
                         onChange={(e) => setSelectedMachine(e.target.value)}
                         className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200"
                     >
-                        <option value="all">All Machines</option>
+                        <option value="all">{t("sensors.allMachines")}</option>
                         {machines.map((m: any) => (
                             <option key={m.id} value={m.id}>
                                 {m.name}
@@ -88,7 +90,7 @@ export default function SensorsPage() {
                         onClick={() => setShowCreateModal(true)}
                         className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
                     >
-                        + Add Sensor
+                        {t("sensors.addSensor")}
                     </button>
                 </div>
             </div>
@@ -106,7 +108,7 @@ export default function SensorsPage() {
                                 <div>
                                     <h3 className="text-xl font-semibold text-slate-100">{sensor.name}</h3>
                                     <p className="text-sm text-slate-400">
-                                        {sensor.sensor_type || "Sensor"} • {sensor.unit || "N/A"}
+                                        {sensor.sensor_type || t("sensors.sensorFallback")} • {sensor.unit || t("common.na")}
                                     </p>
                                     {sensor.latest_value !== undefined && (
                                         <p className="text-2xl font-bold text-emerald-400 mt-2">
@@ -122,17 +124,17 @@ export default function SensorsPage() {
                                         }}
                                         className="px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors"
                                     >
-                                        Edit
+                                        {t("common.edit")}
                                     </button>
                                     <button
                                         onClick={() => {
-                                            if (confirm(`Delete ${sensor.name}?`)) {
+                                            if (confirm(`${t("common.deleteConfirmPrefix")} ${sensor.name}?`)) {
                                                 deleteMutation.mutate(sensor.id);
                                             }
                                         }}
                                         className="px-3 py-1.5 text-sm bg-rose-600/20 hover:bg-rose-600/30 text-rose-200 rounded-lg transition-colors"
                                     >
-                                        Delete
+                                        {t("common.delete")}
                                     </button>
                                 </div>
                             </div>

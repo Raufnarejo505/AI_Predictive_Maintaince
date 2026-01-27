@@ -5,6 +5,7 @@ import { DashboardSkeleton } from "./components/LoadingSkeleton";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { BackendStatusBanner } from "./components/BackendStatusBanner";
 import React, { Suspense } from "react";
+import { useT } from "./i18n/I18nProvider";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -25,14 +26,15 @@ import RolesPage from "./pages/Roles";
 function ProtectedRoute({ children }: { children: JSX.Element }) {
     const { isAuthenticated, isLoading } = useAuth();
     const location = useLocation();
+    const t = useT();
     
     if (isLoading) {
         return (
             <div className="min-h-screen bg-[#010313] flex items-center justify-center">
                 <div className="text-center">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400 mb-4"></div>
-                    <div className="text-lg text-slate-100 mb-2">Loading...</div>
-                    <div className="text-sm text-slate-400">Initializing application</div>
+                    <div className="text-lg text-slate-100 mb-2">{t("common.loading")}</div>
+                    <div className="text-sm text-slate-400">{t("common.initializing")}</div>
                 </div>
             </div>
         );

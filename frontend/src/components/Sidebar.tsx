@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useT } from "../i18n/I18nProvider";
 
 type IconName =
     | "home"
@@ -31,6 +32,11 @@ interface NavSection {
     title?: string;
     items: NavItem[];
 }
+
+type SidebarProps = {
+    isOpen?: boolean;
+    onClose?: () => void;
+};
 
 function NavIcon({ name, active }: { name: IconName; active: boolean }) {
     const common = "w-5 h-5";
@@ -217,9 +223,10 @@ const navSections: NavSection[] = [
     },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     const location = useLocation();
     const { user } = useAuth();
+    const t = useT();
 
     const canAccess = (item: NavItem): boolean => {
         if (!item.requireRole) return true;
@@ -241,7 +248,47 @@ export default function Sidebar() {
         return true;
     };
 
-    const filteredSections: NavSection[] = navSections
+    const sections: NavSection[] = React.useMemo(
+        () => [
+            {
+                items: [
+                    { path: "/", label: t("nav.dashboard"), icon: "dashboard" },
+                    { path: "/machines", label: t("nav.machines"), icon: "machines" },
+                    { path: "/sensors", label: t("nav.sensors"), icon: "sensors" },
+                    { path: "/predictions", label: t("nav.predictions"), icon: "predictions" },
+                    { path: "/alarms", label: t("nav.alarms"), icon: "alarms" },
+                    { path: "/tickets", label: t("nav.tickets"), icon: "tickets" },
+                    { path: "/reports", label: t("nav.reports"), icon: "reports" },
+                ],
+            },
+            {
+                title: t("nav.aiIntegration"),
+                items: [
+                    { path: "/ai", label: t("nav.aiService"), icon: "ai", requireRole: ["engineer", "admin"] },
+                    { path: "/mqtt", label: t("nav.mqttStatus"), icon: "mqtt", requireRole: ["engineer", "admin"] },
+                    { path: "/opcua", label: t("nav.opcuaWizard"), icon: "opcua", requireRole: ["engineer", "admin"] },
+                ],
+            },
+            {
+                items: [
+                    {
+                        path: "/settings",
+                        label: t("nav.settings"),
+                        icon: "settings",
+                        requireRole: ["engineer", "admin"],
+                        children: [
+                            { path: "/notifications", label: t("nav.notifications"), icon: "notifications", requireRole: ["engineer", "admin"] },
+                            { path: "/webhooks", label: t("nav.webhooks"), icon: "webhooks", requireRole: ["engineer", "admin"] },
+                            { path: "/roles", label: t("nav.roles"), icon: "roles", requireRole: ["admin"] },
+                        ],
+                    },
+                ],
+            },
+        ],
+        [t]
+    );
+
+    const filteredSections: NavSection[] = sections
         .map((section) => ({
             ...section,
             items: section.items.filter(canAccessItem),
@@ -272,7 +319,13 @@ export default function Sidebar() {
         return (
             <div key={item.path || item.label} className="space-y-1">
                 {item.path ? (
-                    <Link to={item.path} className={className}>
+                    <Link
+                        to={item.path}
+                        className={className}
+                        onClick={() => {
+                            if (onClose) onClose();
+                        }}
+                    >
                         {content}
                     </Link>
                 ) : (
@@ -288,7 +341,11 @@ export default function Sidebar() {
     };
 
     return (
-        <aside className="fixed left-0 top-0 h-full w-64 z-40 overflow-y-auto">
+        <aside
+            className={`fixed left-0 top-0 h-full w-64 z-40 overflow-y-auto transition-transform duration-200 ease-out
+                ${isOpen ? "translate-x-0" : "-translate-x-full"}
+                lg:translate-x-0`}
+        >
             <div className="p-6">
                 <div className="rounded-[28px] bg-white/80 border border-purple-100 shadow-[0_12px_40px_rgba(139,92,246,0.12)] backdrop-blur px-4 py-5">
                     <div className="flex items-center gap-3 px-2 pb-4">
@@ -296,8 +353,21 @@ export default function Sidebar() {
                             <NavIcon name="home" active={true} />
                         </div>
                         <div className="leading-tight">
-                            <div className="text-[18px] font-semibold text-[#6D28D9]">Predictive Maintenance</div>
+                            <div className="text-[18px] font-semibold text-[#6D28D9]">{t("app.name")}</div>
                         </div>
+                        {onClose ? (
+                            <button
+                                type="button"
+                                aria-label="Navigation schließen"
+                                onClick={onClose}
+                                className="ml-auto lg:hidden inline-flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-purple-50 transition-colors"
+                            >
+                                <svg className="w-4 h-4 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M18 6 6 18" />
+                                    <path d="M6 6l12 12" />
+                                </svg>
+                            </button>
+                        ) : null}
                     </div>
 
                     <nav className="space-y-4">

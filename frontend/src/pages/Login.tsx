@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useT } from "../i18n/I18nProvider";
 
 export default function Login() {
+    const t = useT();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -27,7 +29,7 @@ export default function Login() {
         const value = e.target.value;
         setEmail(value);
         if (value && !validateEmail(value)) {
-            setEmailError("Please enter a valid email address");
+            setEmailError(t("auth.emailInvalid"));
         } else {
             setEmailError("");
         }
@@ -37,7 +39,7 @@ export default function Login() {
         const value = e.target.value;
         setPassword(value);
         if (value && !validatePassword(value)) {
-            setPasswordError("Password must be at least 3 characters");
+            setPasswordError(t("auth.passwordMin3"));
         } else {
             setPasswordError("");
         }
@@ -51,19 +53,19 @@ export default function Login() {
 
         // Validate inputs
         if (!email) {
-            setEmailError("Email is required");
+            setEmailError(t("auth.emailRequired"));
             return;
         }
         if (!validateEmail(email)) {
-            setEmailError("Please enter a valid email address");
+            setEmailError(t("auth.emailInvalid"));
             return;
         }
         if (!password) {
-            setPasswordError("Password is required");
+            setPasswordError(t("auth.passwordRequired"));
             return;
         }
         if (!validatePassword(password)) {
-            setPasswordError("Password must be at least 3 characters");
+            setPasswordError(t("auth.passwordMin3"));
             return;
         }
 
@@ -74,13 +76,13 @@ export default function Login() {
             navigate("/");
         } catch (err: any) {
             // Better error handling for network issues
-            let errorMessage = "Login failed. Please try again.";
+            let errorMessage = t("auth.loginFailed");
             
             if (err.message) {
                 if (err.message.includes("timeout") || err.message.includes("Failed to fetch")) {
-                    errorMessage = "Backend is not responding. Please check if the server is running.";
+                    errorMessage = t("auth.backendNotResponding");
                 } else if (err.message.includes("401") || err.message.includes("Invalid")) {
-                    errorMessage = "Invalid credentials. Please check your email and password.";
+                    errorMessage = t("auth.invalidCredentials");
                 } else {
                     errorMessage = err.message;
                 }
@@ -100,15 +102,15 @@ export default function Login() {
                 {/* Logo/Title Section */}
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-purple-500 mb-2">
-                        Predictive Maintenance
+                        {t("app.name")}
                     </h1>
-                    <p className="text-slate-600 text-sm">Operations Command Center</p>
+                    <p className="text-slate-600 text-sm">{t("app.tagline")}</p>
                 </div>
 
                 {/* Login Card */}
                 <div className="bg-white/90 backdrop-blur-xl border border-slate-200 rounded-2xl p-8 shadow-xl">
                     <h2 className="text-2xl font-semibold text-slate-900 mb-6 text-center">
-                        Sign In
+                        {t("auth.signIn")}
                     </h2>
 
                     {/* Error Message */}
@@ -127,7 +129,7 @@ export default function Login() {
                         {/* Email Field */}
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
-                                Email Address
+                                {t("auth.emailAddress")}
                             </label>
                             <input
                                 id="email"
@@ -136,7 +138,7 @@ export default function Login() {
                                 onChange={handleEmailChange}
                                 onBlur={() => {
                                     if (email && !validateEmail(email)) {
-                                        setEmailError("Please enter a valid email address");
+                                        setEmailError(t("auth.emailInvalid"));
                                     }
                                 }}
                                 className={`w-full px-4 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 
@@ -162,7 +164,7 @@ export default function Login() {
                         {/* Password Field */}
                         <div>
                             <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
-                                Password
+                                {t("auth.password")}
                             </label>
                             <input
                                 id="password"
@@ -171,7 +173,7 @@ export default function Login() {
                                 onChange={handlePasswordChange}
                                 onBlur={() => {
                                     if (password && !validatePassword(password)) {
-                                        setPasswordError("Password must be at least 3 characters");
+                                        setPasswordError(t("auth.passwordMin3"));
                                     }
                                 }}
                                 className={`w-full px-4 py-3 bg-white border rounded-xl text-slate-900 placeholder-slate-400 
@@ -179,7 +181,7 @@ export default function Login() {
                                     transition-all duration-200
                                     ${passwordError ? "border-rose-400 focus:ring-rose-500/20 focus:border-rose-400" : "border-slate-200"}
                                     disabled:opacity-50 disabled:cursor-not-allowed`}
-                                placeholder="Enter your password"
+                                placeholder={t("auth.enterPassword")}
                                 required
                                 disabled={isLoading}
                                 autoComplete="current-password"
@@ -210,17 +212,17 @@ export default function Login() {
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    <span>Signing in...</span>
+                                    <span>{t("auth.signingIn")}</span>
                                 </>
                             ) : (
-                                <span>Sign In</span>
+                                <span>{t("auth.signIn")}</span>
                             )}
                         </button>
                     </form>
 
                     {/* Demo Credentials + Sign up link */}
                     <div className="mt-6 pt-6 border-t border-slate-200 space-y-3">
-                        <p className="text-xs text-slate-500 text-center">Demo Credentials:</p>
+                        <p className="text-xs text-slate-500 text-center">{t("auth.demoCredentials")}</p>
                         <div className="flex flex-col gap-1 text-xs">
                             <div className="flex justify-between items-center p-2 bg-slate-50 rounded border border-slate-200">
                                 <span className="text-slate-500">Admin:</span>
@@ -236,9 +238,9 @@ export default function Login() {
                             </div>
                         </div>
                         <p className="text-center text-xs text-slate-500">
-                            Don&apos;t have an account?{" "}
+                            {t("auth.dontHaveAccount")}{" "}
                             <a href="/register" className="text-purple-700 hover:text-purple-600 font-medium">
-                                Sign up
+                                {t("auth.signUpLink")}
                             </a>
                         </p>
                     </div>
@@ -246,7 +248,7 @@ export default function Login() {
 
                 {/* Footer */}
                 <p className="text-center text-slate-500 text-xs mt-6">
-                    © 2025 Predictive Maintenance Platform
+                    © 2025 {t("app.name")}
                 </p>
             </div>
         </div>

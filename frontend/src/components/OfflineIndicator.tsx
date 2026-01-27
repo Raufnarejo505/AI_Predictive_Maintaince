@@ -4,6 +4,7 @@
  */
 import React, { useState, useEffect } from "react";
 import { ServiceHealthChecker, ServiceStatus } from "../utils/offlineMode";
+import { useT } from "../i18n/I18nProvider";
 
 export function OfflineIndicator() {
     const [status, setStatus] = useState<ServiceStatus>({
@@ -13,6 +14,7 @@ export function OfflineIndicator() {
         lastCheck: 0,
     });
     const [isChecking, setIsChecking] = useState(false);
+    const t = useT();
 
     useEffect(() => {
         const checkServices = async () => {
@@ -49,22 +51,20 @@ export function OfflineIndicator() {
                     {isChecking ? (
                         <>
                             <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
-                            <span>Checking services...</span>
+                            <span>{t("offline.checkingServices")}</span>
                         </>
                     ) : isOffline ? (
                         <>
-                            <span>⚠️</span>
-                            <span>Offline Mode - Using cached/mock data</span>
+                            <span>{t("offline.offlineModeCached")}</span>
                         </>
                     ) : (
                         <>
-                            <span>✅</span>
                             <span>
-                                Services:{" "}
+                                {t("offline.services")}: {" "}
                                 {[
-                                    status.backend && "Backend",
-                                    status.ai && "AI",
-                                    status.mqtt && "MQTT",
+                                    status.backend && t("offline.backend"),
+                                    status.ai && t("offline.ai"),
+                                    status.mqtt && t("offline.mqtt"),
                                 ]
                                     .filter(Boolean)
                                     .join(", ")}
