@@ -6,6 +6,7 @@ import os
 import re
 
 from fastapi import APIRouter, Depends, Query, HTTPException
+from loguru import logger
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -111,7 +112,8 @@ async def get_extruder_latest_rows(
     user = (os.getenv("MSSQL_USER") or "").strip()
     password = os.getenv("MSSQL_PASSWORD")
     database = (os.getenv("MSSQL_DATABASE") or "HISTORISCH").strip()
-    table = (os.getenv("MSSQL_TABLE") or "Tab_Actual").strip()
+    table_raw = (os.getenv("MSSQL_TABLE") or "Tab_Actual").strip()
+    schema_raw = (os.getenv("MSSQL_SCHEMA") or "dbo").strip()
 
     try:
         port = int(port_raw)
@@ -125,15 +127,25 @@ async def get_extruder_latest_rows(
         _extruder_last_error_at = datetime.utcnow()
         raise HTTPException(status_code=500, detail="MSSQL is not configured")
 
-    if not re.fullmatch(r"[A-Za-z0-9_]+", table or ""):
-        _extruder_last_error = "Invalid MSSQL table identifier"
+    schema = schema_raw
+    table = table_raw
+    if "." in table_raw:
+        parts = [p for p in table_raw.split(".") if p]
+        if len(parts) != 2:
+            _extruder_last_error = "Invalid MSSQL table identifier"
+            _extruder_last_error_at = datetime.utcnow()
+            raise HTTPException(status_code=500, detail="Invalid MSSQL table identifier")
+        schema, table = parts[0], parts[1]
+
+    if not re.fullmatch(r"[A-Za-z0-9_]+", schema or "") or not re.fullmatch(r"[A-Za-z0-9_]+", table or ""):
+        _extruder_last_error = "Invalid MSSQL schema/table identifier"
         _extruder_last_error_at = datetime.utcnow()
-        raise HTTPException(status_code=500, detail="Invalid MSSQL table identifier")
+        raise HTTPException(status_code=500, detail="Invalid MSSQL schema/table identifier")
 
     def _fetch_sync() -> Dict[str, Any]:
         import pymssql
 
-        table_sql = f"[dbo].[{table}]"
+        table_sql = f"[{schema}].[{table}]"
         query = (
             f"SELECT TOP ({int(limit)}) TrendDate, Val_4, Val_6, Val_7, Val_8, Val_9, Val_10 "
             f"FROM {table_sql} "
@@ -207,8 +219,14 @@ async def get_extruder_latest_rows(
         return result
     except HTTPException:
         raise
-    except Exception:
-        _extruder_last_error = "Failed to read MSSQL extruder data"
+    except Exception as e:
+        msg = f"{type(e).__name__}: {e}"
+        msg = msg.replace(password or "", "***")
+        if len(msg) > 500:
+            msg = msg[:500] + "..."
+
+        logger.exception("MSSQL extruder read failed")
+        _extruder_last_error = msg
         _extruder_last_error_at = datetime.utcnow()
         raise HTTPException(status_code=502, detail="Failed to read MSSQL extruder data")
 
@@ -222,7 +240,15 @@ async def get_extruder_status(
     user = (os.getenv("MSSQL_USER") or "").strip()
     password = os.getenv("MSSQL_PASSWORD")
     database = (os.getenv("MSSQL_DATABASE") or "HISTORISCH").strip()
-    table = (os.getenv("MSSQL_TABLE") or "Tab_Actual").strip()
+    table_raw = (os.getenv("MSSQL_TABLE") or "Tab_Actual").strip()
+    schema_raw = (os.getenv("MSSQL_SCHEMA") or "dbo").strip()
+
+    schema = schema_raw
+    table = table_raw
+    if "." in table_raw:
+        parts = [p for p in table_raw.split(".") if p]
+        if len(parts) == 2:
+            schema, table = parts[0], parts[1]
 
     configured = bool(host and user and password)
     try:
@@ -235,6 +261,7 @@ async def get_extruder_status(
         "host": host or None,
         "port": port,
         "database": database or None,
+        "schema": schema or None,
         "table": table or None,
         "last_attempt_at": _extruder_last_attempt_at.isoformat() if _extruder_last_attempt_at else None,
         "last_success_at": _extruder_last_success_at.isoformat() if _extruder_last_success_at else None,
