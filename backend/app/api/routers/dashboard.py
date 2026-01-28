@@ -19,6 +19,12 @@ from app.models.sensor_data import SensorData
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
+
+_extruder_last_attempt_at: datetime | None = None
+_extruder_last_success_at: datetime | None = None
+_extruder_last_error_at: datetime | None = None
+_extruder_last_error: str | None = None
+
 # Simple in-memory cache (can be replaced with Redis)
 _cache: Dict[str, tuple] = {}
 CACHE_TTL = 10  # seconds - reduced for faster alarm updates
@@ -97,6 +103,9 @@ async def get_extruder_latest_rows(
     current_user: User = Depends(require_viewer),
     limit: int = Query(200, ge=1, le=5000),
 ):
+    global _extruder_last_attempt_at, _extruder_last_success_at, _extruder_last_error_at, _extruder_last_error
+    _extruder_last_attempt_at = datetime.utcnow()
+
     host = (os.getenv("MSSQL_HOST") or "").strip()
     port_raw = (os.getenv("MSSQL_PORT") or "1433").strip()
     user = (os.getenv("MSSQL_USER") or "").strip()
@@ -107,12 +116,18 @@ async def get_extruder_latest_rows(
     try:
         port = int(port_raw)
     except Exception:
+        _extruder_last_error = "Invalid MSSQL_PORT"
+        _extruder_last_error_at = datetime.utcnow()
         raise HTTPException(status_code=500, detail="Invalid MSSQL_PORT")
 
     if not host or not user or not password:
+        _extruder_last_error = "MSSQL is not configured"
+        _extruder_last_error_at = datetime.utcnow()
         raise HTTPException(status_code=500, detail="MSSQL is not configured")
 
     if not re.fullmatch(r"[A-Za-z0-9_]+", table or ""):
+        _extruder_last_error = "Invalid MSSQL table identifier"
+        _extruder_last_error_at = datetime.utcnow()
         raise HTTPException(status_code=500, detail="Invalid MSSQL table identifier")
 
     def _fetch_sync() -> Dict[str, Any]:
@@ -185,12 +200,47 @@ async def get_extruder_latest_rows(
 
     try:
         import asyncio
-
-        return await asyncio.to_thread(_fetch_sync)
+        result = await asyncio.to_thread(_fetch_sync)
+        _extruder_last_success_at = datetime.utcnow()
+        _extruder_last_error = None
+        _extruder_last_error_at = None
+        return result
     except HTTPException:
         raise
     except Exception:
+        _extruder_last_error = "Failed to read MSSQL extruder data"
+        _extruder_last_error_at = datetime.utcnow()
         raise HTTPException(status_code=502, detail="Failed to read MSSQL extruder data")
+
+
+@router.get("/extruder/status")
+async def get_extruder_status(
+    current_user: User = Depends(require_viewer),
+):
+    host = (os.getenv("MSSQL_HOST") or "").strip()
+    port_raw = (os.getenv("MSSQL_PORT") or "1433").strip()
+    user = (os.getenv("MSSQL_USER") or "").strip()
+    password = os.getenv("MSSQL_PASSWORD")
+    database = (os.getenv("MSSQL_DATABASE") or "HISTORISCH").strip()
+    table = (os.getenv("MSSQL_TABLE") or "Tab_Actual").strip()
+
+    configured = bool(host and user and password)
+    try:
+        port = int(port_raw)
+    except Exception:
+        port = None
+
+    return {
+        "configured": configured,
+        "host": host or None,
+        "port": port,
+        "database": database or None,
+        "table": table or None,
+        "last_attempt_at": _extruder_last_attempt_at.isoformat() if _extruder_last_attempt_at else None,
+        "last_success_at": _extruder_last_success_at.isoformat() if _extruder_last_success_at else None,
+        "last_error_at": _extruder_last_error_at.isoformat() if _extruder_last_error_at else None,
+        "last_error": _extruder_last_error,
+    }
 
 
 @router.get("/machines/stats")

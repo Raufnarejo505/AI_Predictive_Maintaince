@@ -19,6 +19,8 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
   const [predictions, setPredictions] = useState<any[]>([]);
   const [aiStatus, setAiStatus] = useState<any>(null);
   const [mqttStatus, setMqttStatus] = useState<any>(null);
+  const [mssqlStatus, setMssqlStatus] = useState<any>(null);
+  const [mssqlRows, setMssqlRows] = useState<any[]>([]);
   const [machinesStats, setMachinesStats] = useState<any>(null);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [sensorsStats, setSensorsStats] = useState<any>(null);
@@ -53,7 +55,7 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
       
       try {
         // Fetch all data in parallel - matching backend endpoints
-        const [overviewResult, predictionsResult, aiResult, mqttResult, machinesStatsResult, sensorsStatsResult, predictionsStatsResult] = await Promise.all([
+        const [overviewResult, predictionsResult, aiResult, mqttResult, machinesStatsResult, sensorsStatsResult, predictionsStatsResult, mssqlStatusResult, mssqlLatestResult] = await Promise.all([
           safeApi.get('/dashboard/overview'),
           safeApi.get('/predictions?limit=30&sort=desc'),
           safeApi.get('/ai/status'),
@@ -61,13 +63,16 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
           safeApi.get('/dashboard/machines/stats'),
           safeApi.get('/dashboard/sensors/stats'),
           safeApi.get('/dashboard/predictions/stats'),
+          safeApi.get('/dashboard/extruder/status'),
+          safeApi.get('/dashboard/extruder/latest?limit=50'),
         ]);
         
         if (!mountedRef.current) return;
         
         const hasFallback = overviewResult.fallback || predictionsResult.fallback || 
                            aiResult.fallback || mqttResult.fallback ||
-                           machinesStatsResult.fallback || sensorsStatsResult.fallback || predictionsStatsResult.fallback;
+                           machinesStatsResult.fallback || sensorsStatsResult.fallback || predictionsStatsResult.fallback ||
+                           mssqlStatusResult.fallback || mssqlLatestResult.fallback;
         setIsFallback(hasFallback);
         
         // If AI is offline, disable live updates
@@ -80,6 +85,8 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
         if (predictionsResult.data) setPredictions(Array.isArray(predictionsResult.data) ? predictionsResult.data : []);
         if (aiResult.data) setAiStatus(aiResult.data);
         if (mqttResult.data) setMqttStatus(mqttResult.data);
+        if (mssqlStatusResult.data) setMssqlStatus(mssqlStatusResult.data);
+        if ((mssqlLatestResult.data as any)?.rows) setMssqlRows(((mssqlLatestResult.data as any).rows as any[]) || []);
         if (machinesStatsResult.data) setMachinesStats(machinesStatsResult.data);
         if (sensorsStatsResult.data) setSensorsStats(sensorsStatsResult.data);
         if (predictionsStatsResult.data) setPredictionsStats(predictionsStatsResult.data);
@@ -218,6 +225,19 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
                 {isFallback || !mqttStatus ? 'Offline' : (mqttStatus.connected ? 'Connected' : 'Disconnected')}
               </div>
             </div>
+            <div className="bg-white/90 border border-slate-200 rounded-lg px-4 py-2 shadow-sm">
+              <span className="text-xs text-slate-500 font-medium">MSSQL</span>
+              <div className="text-slate-900 font-semibold">
+                {!mssqlStatus
+                  ? 'Unknown'
+                  : (!mssqlStatus.configured ? 'Not Configured' : (mssqlStatus.last_error ? 'Error' : 'Connected'))}
+              </div>
+              {mssqlStatus?.last_error ? (
+                <div className="text-xs text-rose-700 mt-1 max-w-[260px] truncate" title={String(mssqlStatus.last_error)}>
+                  {String(mssqlStatus.last_error)}
+                </div>
+              ) : null}
+            </div>
             <div className="bg-white/90 border border-slate-200 rounded-lg px-4 py-2 flex items-center gap-2 shadow-sm">
               <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
               <div>
@@ -226,6 +246,12 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
               </div>
             </div>
           </div>
+
+          {mssqlStatus && mssqlStatus.configured && mssqlStatus.last_error && (
+            <div className="mb-4 text-sm text-rose-800 bg-rose-50 border border-rose-200 rounded-lg px-4 py-2">
+              MSSQL error: {String(mssqlStatus.last_error)}
+            </div>
+          )}
           
           {/* Controls Row */}
           <div className="flex items-center justify-between">
@@ -272,6 +298,49 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-slate-900 mb-4">{t('sensorMonitors.liveTitle')}</h2>
           <SensorMonitors refreshInterval={2000} />
+        </div>
+
+        {/* MSSQL Extruder Latest Rows */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-slate-900 mb-4">MSSQL Extruder (Latest)</h2>
+          {!mssqlStatus?.configured ? (
+            <div className="bg-white/90 border border-slate-200 rounded-xl p-4 text-slate-700">
+              MSSQL not configured. Set backend env vars: MSSQL_HOST, MSSQL_USER, MSSQL_PASSWORD.
+            </div>
+          ) : mssqlStatus?.last_error ? (
+            <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 text-rose-800">
+              Unable to load MSSQL data: {String(mssqlStatus.last_error)}
+            </div>
+          ) : (
+            <div className="bg-white/90 border border-slate-200 rounded-xl p-4 overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="text-slate-600">
+                  <tr>
+                    <th className="text-left py-2 pr-4">TrendDate</th>
+                    <th className="text-left py-2 pr-4">Val_4</th>
+                    <th className="text-left py-2 pr-4">Val_6</th>
+                    <th className="text-left py-2 pr-4">Val_7</th>
+                    <th className="text-left py-2 pr-4">Val_8</th>
+                    <th className="text-left py-2 pr-4">Val_9</th>
+                    <th className="text-left py-2 pr-4">Val_10</th>
+                  </tr>
+                </thead>
+                <tbody className="text-slate-900">
+                  {(mssqlRows || []).slice(-15).map((r: any, idx: number) => (
+                    <tr key={idx} className="border-t border-slate-100">
+                      <td className="py-2 pr-4 whitespace-nowrap">{r?.TrendDate ?? ''}</td>
+                      <td className="py-2 pr-4">{r?.Val_4 ?? ''}</td>
+                      <td className="py-2 pr-4">{r?.Val_6 ?? ''}</td>
+                      <td className="py-2 pr-4">{r?.Val_7 ?? ''}</td>
+                      <td className="py-2 pr-4">{r?.Val_8 ?? ''}</td>
+                      <td className="py-2 pr-4">{r?.Val_9 ?? ''}</td>
+                      <td className="py-2 pr-4">{r?.Val_10 ?? ''}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* KPI Cards - 4 Large Cards */}
