@@ -2,6 +2,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import json
+import re
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -70,6 +71,10 @@ class MSSQLExtruderPoller:
         self._config_reload_seconds: int = 30
         self._effective_enabled: bool = False
         self._config_fingerprint: Optional[str] = None
+
+        self._consecutive_failures: int = 0
+        self._next_retry_at: Optional[datetime] = None
+        self._max_backoff_seconds: int = 300
 
     def start(self, loop: asyncio.AbstractEventLoop) -> None:
         if not self.enabled:
@@ -306,6 +311,33 @@ class MSSQLExtruderPoller:
     def _fetch_rows_sync(self) -> List[ExtruderSqlRow]:
         import pymssql
 
+        # Prevent injection or accidental multi-statement execution via config.
+        # Allow only simple identifiers like Tab_Actual.
+        if not re.fullmatch(r"[A-Za-z0-9_]+", self.table or ""):
+            raise ValueError("Invalid MSSQL table identifier")
+
+        table_sql = f"[dbo].[{self.table}]"
+
+        def _ensure_select_only(sql: str) -> None:
+            s = (sql or "").strip().lower()
+            if not s.startswith("select"):
+                raise ValueError("Non-SELECT statement blocked")
+            blocked = (
+                "insert ",
+                "update ",
+                "delete ",
+                "merge ",
+                "alter ",
+                "drop ",
+                "create ",
+                "truncate ",
+                "exec ",
+                "execute ",
+                ";",
+            )
+            if any(tok in s for tok in blocked):
+                raise ValueError("Potentially unsafe SQL blocked")
+
         conn = pymssql.connect(
             server=self.host,
             user=self.username,
@@ -316,22 +348,37 @@ class MSSQLExtruderPoller:
             timeout=10,
         )
         try:
+            # Make the connection read-friendly.
+            try:
+                conn.autocommit(True)
+            except Exception:
+                pass
+
             cur = conn.cursor(as_dict=True)
+            try:
+                cur.execute("SET NOCOUNT ON")
+                cur.execute("SET TRANSACTION ISOLATION LEVEL READ COMMITTED")
+            except Exception:
+                # Not critical; continue.
+                pass
+
             if self._last_trend_date is None:
                 query = (
                     f"SELECT TOP ({self.max_rows_per_poll}) TrendDate, Val_4, Val_6, Val_7, Val_8, Val_9, Val_10 "
-                    f"FROM dbo.{self.table} "
+                    f"FROM {table_sql} "
                     f"WHERE TrendDate >= DATEADD(minute, -{int(self.window_minutes)}, GETDATE()) "
                     f"ORDER BY TrendDate ASC"
                 )
+                _ensure_select_only(query)
                 cur.execute(query)
             else:
                 query = (
                     f"SELECT TOP ({self.max_rows_per_poll}) TrendDate, Val_4, Val_6, Val_7, Val_8, Val_9, Val_10 "
-                    f"FROM dbo.{self.table} "
+                    f"FROM {table_sql} "
                     f"WHERE TrendDate > %s "
                     f"ORDER BY TrendDate ASC"
                 )
+                _ensure_select_only(query)
                 cur.execute(query, (self._last_trend_date,))
 
             rows = cur.fetchall() or []
@@ -430,6 +477,11 @@ class MSSQLExtruderPoller:
                     await asyncio.sleep(5)
                     continue
 
+                now = datetime.utcnow()
+                if self._next_retry_at and now < self._next_retry_at:
+                    await asyncio.sleep(1)
+                    continue
+
                 new_rows = await asyncio.to_thread(self._fetch_rows_sync)
                 if new_rows:
                     for r in new_rows:
@@ -453,8 +505,19 @@ class MSSQLExtruderPoller:
                         meta.get("drift_score"),
                         meta.get("window_size"),
                     )
+
+                self._consecutive_failures = 0
+                self._next_retry_at = None
             except Exception as e:
-                logger.error(f"MSSQL extruder poller error: {e}")
+                self._consecutive_failures += 1
+                backoff = min(self._max_backoff_seconds, 2 ** min(self._consecutive_failures, 8))
+                self._next_retry_at = datetime.utcnow() + timedelta(seconds=backoff)
+                logger.error(
+                    "MSSQL extruder poller error (attempt={} backoff_s={}): {}",
+                    self._consecutive_failures,
+                    backoff,
+                    str(e),
+                )
 
             await asyncio.sleep(self.poll_interval_seconds)
 

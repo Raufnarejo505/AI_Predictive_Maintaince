@@ -165,7 +165,16 @@ async def test_mssql_connection(
             timeout=5,
         )
         try:
+            try:
+                conn.autocommit(True)
+            except Exception:
+                pass
             cur = conn.cursor(as_dict=True)
+            try:
+                cur.execute("SET NOCOUNT ON")
+                cur.execute("SET TRANSACTION ISOLATION LEVEL READ COMMITTED")
+            except Exception:
+                pass
             cur.execute("SELECT 1 AS ok")
             cur.fetchone()
         finally:
