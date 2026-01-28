@@ -2,8 +2,10 @@ from datetime import datetime, timedelta
 from typing import Dict, Any
 from functools import lru_cache
 import time
+import os
+import re
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -88,6 +90,107 @@ async def get_overview(
     
     set_cached(cache_key, result)
     return result
+
+
+@router.get("/extruder/latest")
+async def get_extruder_latest_rows(
+    current_user: User = Depends(require_viewer),
+    limit: int = Query(200, ge=1, le=5000),
+):
+    host = (os.getenv("MSSQL_HOST") or "").strip()
+    port_raw = (os.getenv("MSSQL_PORT") or "1433").strip()
+    user = (os.getenv("MSSQL_USER") or "").strip()
+    password = os.getenv("MSSQL_PASSWORD")
+    database = (os.getenv("MSSQL_DATABASE") or "HISTORISCH").strip()
+    table = (os.getenv("MSSQL_TABLE") or "Tab_Actual").strip()
+
+    try:
+        port = int(port_raw)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Invalid MSSQL_PORT")
+
+    if not host or not user or not password:
+        raise HTTPException(status_code=500, detail="MSSQL is not configured")
+
+    if not re.fullmatch(r"[A-Za-z0-9_]+", table or ""):
+        raise HTTPException(status_code=500, detail="Invalid MSSQL table identifier")
+
+    def _fetch_sync() -> Dict[str, Any]:
+        import pymssql
+
+        table_sql = f"[dbo].[{table}]"
+        query = (
+            f"SELECT TOP ({int(limit)}) TrendDate, Val_4, Val_6, Val_7, Val_8, Val_9, Val_10 "
+            f"FROM {table_sql} "
+            f"ORDER BY TrendDate DESC"
+        )
+
+        s = query.strip().lower()
+        if not s.startswith("select") or ";" in s:
+            raise ValueError("Unsafe SQL blocked")
+
+        conn = pymssql.connect(
+            server=host,
+            user=user,
+            password=password,
+            database=database,
+            port=port,
+            login_timeout=10,
+            timeout=10,
+        )
+        try:
+            try:
+                conn.autocommit(True)
+            except Exception:
+                pass
+
+            cur = conn.cursor(as_dict=True)
+            try:
+                cur.execute("SET NOCOUNT ON")
+                cur.execute("SET TRANSACTION ISOLATION LEVEL READ COMMITTED")
+            except Exception:
+                pass
+
+            cur.execute(query)
+            rows = cur.fetchall() or []
+            out = []
+            for r in rows:
+                td = r.get("TrendDate")
+                if isinstance(td, datetime):
+                    trend_date = td.isoformat()
+                elif td is None:
+                    trend_date = None
+                else:
+                    trend_date = str(td)
+
+                out.append(
+                    {
+                        "TrendDate": trend_date,
+                        "Val_4": r.get("Val_4"),
+                        "Val_6": r.get("Val_6"),
+                        "Val_7": r.get("Val_7"),
+                        "Val_8": r.get("Val_8"),
+                        "Val_9": r.get("Val_9"),
+                        "Val_10": r.get("Val_10"),
+                    }
+                )
+
+            out.reverse()
+            return {"rows": out}
+        finally:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+    try:
+        import asyncio
+
+        return await asyncio.to_thread(_fetch_sync)
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=502, detail="Failed to read MSSQL extruder data")
 
 
 @router.get("/machines/stats")

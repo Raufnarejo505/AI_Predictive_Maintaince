@@ -17,7 +17,6 @@ from app.api.routers import (
     alarms,
     attachments,
     audit,
-    connections,
     dashboard,
     health,
     history,
@@ -150,7 +149,6 @@ app.include_router(dashboard.router)
 app.include_router(ai.router)
 app.include_router(mqtt.router)
 app.include_router(opcua.router)
-app.include_router(connections.router)
 app.include_router(settings_router.router)
 app.include_router(system.router)
 app.include_router(webhooks.router)

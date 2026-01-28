@@ -17,7 +17,7 @@ services:
     image: eclipse-mosquitto:2
     restart: unless-stopped
     volumes:
-      - ./mqtt:/mosquitto/config
+      - ./mqtt:/mosquitto/config:Z
     ports:
       - "1883:1883"
     networks:
