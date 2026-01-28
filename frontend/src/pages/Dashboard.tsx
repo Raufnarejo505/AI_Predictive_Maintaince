@@ -317,24 +317,24 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
                 <thead className="text-slate-600">
                   <tr>
                     <th className="text-left py-2 pr-4">TrendDate</th>
-                    <th className="text-left py-2 pr-4">Val_4</th>
-                    <th className="text-left py-2 pr-4">Val_6</th>
-                    <th className="text-left py-2 pr-4">Val_7</th>
-                    <th className="text-left py-2 pr-4">Val_8</th>
-                    <th className="text-left py-2 pr-4">Val_9</th>
-                    <th className="text-left py-2 pr-4">Val_10</th>
+                    <th className="text-left py-2 pr-4">ScrewSpeed_rpm</th>
+                    <th className="text-left py-2 pr-4">Pressure_bar</th>
+                    <th className="text-left py-2 pr-4">Temp_Zone1_C</th>
+                    <th className="text-left py-2 pr-4">Temp_Zone2_C</th>
+                    <th className="text-left py-2 pr-4">Temp_Zone3_C</th>
+                    <th className="text-left py-2 pr-4">Temp_Zone4_C</th>
                   </tr>
                 </thead>
                 <tbody className="text-slate-900">
                   {(mssqlRows || []).slice(-15).map((r: any, idx: number) => (
                     <tr key={idx} className="border-t border-slate-100">
                       <td className="py-2 pr-4 whitespace-nowrap">{r?.TrendDate ?? ''}</td>
-                      <td className="py-2 pr-4">{r?.Val_4 ?? ''}</td>
-                      <td className="py-2 pr-4">{r?.Val_6 ?? ''}</td>
-                      <td className="py-2 pr-4">{r?.Val_7 ?? ''}</td>
-                      <td className="py-2 pr-4">{r?.Val_8 ?? ''}</td>
-                      <td className="py-2 pr-4">{r?.Val_9 ?? ''}</td>
-                      <td className="py-2 pr-4">{r?.Val_10 ?? ''}</td>
+                      <td className="py-2 pr-4">{r?.ScrewSpeed_rpm ?? ''}</td>
+                      <td className="py-2 pr-4">{r?.Pressure_bar ?? ''}</td>
+                      <td className="py-2 pr-4">{r?.Temp_Zone1_C ?? ''}</td>
+                      <td className="py-2 pr-4">{r?.Temp_Zone2_C ?? ''}</td>
+                      <td className="py-2 pr-4">{r?.Temp_Zone3_C ?? ''}</td>
+                      <td className="py-2 pr-4">{r?.Temp_Zone4_C ?? ''}</td>
                     </tr>
                   ))}
                 </tbody>

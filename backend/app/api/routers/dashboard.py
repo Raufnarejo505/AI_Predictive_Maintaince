@@ -146,8 +146,16 @@ async def get_extruder_latest_rows(
         import pymssql
 
         table_sql = f"[{schema}].[{table}]"
+        # MSSQL 2000 does not support parentheses around TOP value
         query = (
-            f"SELECT TOP ({int(limit)}) TrendDate, Val_4, Val_6, Val_7, Val_8, Val_9, Val_10 "
+            f"SELECT TOP {int(limit)} "
+            f"TrendDate, "
+            f"Val_4 AS ScrewSpeed_rpm, "
+            f"Val_6 AS Pressure_bar, "
+            f"Val_7 AS Temp_Zone1_C, "
+            f"Val_8 AS Temp_Zone2_C, "
+            f"Val_9 AS Temp_Zone3_C, "
+            f"Val_10 AS Temp_Zone4_C "
             f"FROM {table_sql} "
             f"ORDER BY TrendDate DESC"
         )
@@ -193,12 +201,12 @@ async def get_extruder_latest_rows(
                 out.append(
                     {
                         "TrendDate": trend_date,
-                        "Val_4": r.get("Val_4"),
-                        "Val_6": r.get("Val_6"),
-                        "Val_7": r.get("Val_7"),
-                        "Val_8": r.get("Val_8"),
-                        "Val_9": r.get("Val_9"),
-                        "Val_10": r.get("Val_10"),
+                        "ScrewSpeed_rpm": r.get("ScrewSpeed_rpm"),
+                        "Pressure_bar": r.get("Pressure_bar"),
+                        "Temp_Zone1_C": r.get("Temp_Zone1_C"),
+                        "Temp_Zone2_C": r.get("Temp_Zone2_C"),
+                        "Temp_Zone3_C": r.get("Temp_Zone3_C"),
+                        "Temp_Zone4_C": r.get("Temp_Zone4_C"),
                     }
                 )
 
