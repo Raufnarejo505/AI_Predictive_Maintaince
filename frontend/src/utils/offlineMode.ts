@@ -81,6 +81,9 @@ class ServiceHealthChecker {
 
         const apiBase = (window as any).VITE_API_URL || "/api";
 
+        const token = localStorage.getItem("access_token");
+        const authHeaders: any = token ? { Authorization: `Bearer ${token}` } : {};
+
         // Check backend
         try {
             await $.ajax({
@@ -98,6 +101,7 @@ class ServiceHealthChecker {
             await $.ajax({
                 url: `${apiBase}/ai/status`,
                 method: "GET",
+                headers: authHeaders,
                 timeout: 3000,
             });
             this.status.ai = true;
@@ -110,6 +114,7 @@ class ServiceHealthChecker {
             await $.ajax({
                 url: `${apiBase}/mqtt/status`,
                 method: "GET",
+                headers: authHeaders,
                 timeout: 3000,
             });
             this.status.mqtt = true;

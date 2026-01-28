@@ -23,9 +23,9 @@ python-jose[cryptography]==3.3.0
 pyjwt[crypto]==2.9.0
 email-validator==2.2.0
 apscheduler==3.10.4
+pymssql==2.3.1
 pytest==8.3.3
 pytest-asyncio==0.24.0
 pytest-cov==5.0.0
 aiosmtplib==2.0.2
 psutil==5.9.8
-

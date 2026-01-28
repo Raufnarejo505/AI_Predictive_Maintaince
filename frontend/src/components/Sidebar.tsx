@@ -277,6 +277,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                         icon: "settings",
                         requireRole: ["engineer", "admin"],
                         children: [
+                            { path: "/connections", label: t("nav.connections"), icon: "settings", requireRole: ["engineer", "admin"] },
                             { path: "/notifications", label: t("nav.notifications"), icon: "notifications", requireRole: ["engineer", "admin"] },
                             { path: "/webhooks", label: t("nav.webhooks"), icon: "webhooks", requireRole: ["engineer", "admin"] },
                             { path: "/roles", label: t("nav.roles"), icon: "roles", requireRole: ["admin"] },

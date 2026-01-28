@@ -17,6 +17,7 @@ from app.api.routers import (
     alarms,
     attachments,
     audit,
+    connections,
     dashboard,
     health,
     history,
@@ -44,6 +45,7 @@ from app.core.config import get_settings
 from app.db.session import AsyncSessionLocal
 from app.mqtt.consumer import mqtt_ingestor
 from app.opcua.connector import opcua_connector
+from app.services.mssql_extruder_poller import mssql_extruder_poller
 from app.services import notification_service
 from app.services.incident_manager import incident_manager
 
@@ -148,6 +150,7 @@ app.include_router(dashboard.router)
 app.include_router(ai.router)
 app.include_router(mqtt.router)
 app.include_router(opcua.router)
+app.include_router(connections.router)
 app.include_router(settings_router.router)
 app.include_router(system.router)
 app.include_router(webhooks.router)
@@ -216,6 +219,9 @@ async def startup_event():
     logger.info("MQTT consumer ENABLED - receiving data from OPC UA edge gateway")
     # Start OPC UA connector worker (no‑op if no active sources yet)
     opcua_connector.start(loop)
+
+    # Optional: MSSQL read-only extruder poller (no OPC UA). Opt-in via env vars.
+    mssql_extruder_poller.start(loop)
     await asyncio.sleep(1)
     logger.info("Startup complete - OPC UA connector ready")
     
@@ -254,4 +260,5 @@ async def startup_event():
 async def shutdown_event():
     mqtt_ingestor.stop()
     await opcua_connector.stop()
+    await mssql_extruder_poller.stop()
 
