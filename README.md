@@ -1,13 +1,13 @@
 # Predictive Maintenance Platform
 
-A comprehensive industrial IoT platform for predictive maintenance, featuring real-time sensor data ingestion, AI-powered anomaly detection, and a modern web dashboard.
+A production-grade industrial IoT platform for predictive maintenance. Provides real-time sensor data ingestion, AI-powered anomaly detection, and a modern web dashboard for industrial equipment monitoring.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
 - Docker Desktop installed and running
-- Ports available: 3000, 8000, 8001, 1883, 5432
+- Available ports: 3000, 8000, 8001, 1883, 5432
 
 ### Start the Platform
 
@@ -24,52 +24,52 @@ docker-compose logs -f
 
 ### Access the Application
 
-- **Frontend Dashboard:** http://localhost:3000
-- **Backend API Docs:** http://localhost:8000/docs
-- **Backend Status:** http://localhost:8000/status
-- **AI Service Health:** http://localhost:8001/health
+- Frontend Dashboard: http://localhost:3000
+- Backend API Documentation: http://localhost:8000/docs
+- Backend Status: http://localhost:8000/status
+- AI Service Health: http://localhost:8001/health
 
 ### Demo Login Credentials
 
-- **Admin:** `admin@example.com` / `admin123`
-- **Engineer:** `engineer@example.com` / `engineer123`
-- **Viewer:** `viewer@example.com` / `viewer123`
+- Admin: `admin@example.com` / `admin123`
+- Engineer: `engineer@example.com` / `engineer123`
+- Viewer: `viewer@example.com` / `viewer123`
 
-## 📋 System Architecture
+## System Architecture
 
 ### Services
 
-1. **Backend (FastAPI)** - Port 8000
+1. Backend (FastAPI) - Port 8000
    - RESTful API with async SQLAlchemy
-   - JWT authentication & RBAC
+   - JWT authentication and RBAC
    - MQTT consumer for sensor data
    - Real-time WebSocket/SSE support
 
-2. **Frontend (React + Vite)** - Port 3000
-   - Modern React 18 with TypeScript
+2. Frontend (React + Vite) - Port 3000
+   - React 18 with TypeScript
    - Tailwind CSS styling
    - React Query for data fetching
    - Real-time dashboard updates
 
-3. **AI Service (FastAPI)** - Port 8001
+3. AI Service (FastAPI) - Port 8001
    - Isolation Forest anomaly detection
    - Rule-based fallback system
    - Real-time prediction engine
 
-4. **Database (TimescaleDB)** - Port 5432
+4. Database (TimescaleDB) - Port 5432
    - PostgreSQL 15 with Timescale extension
    - Time-series optimized storage
    - Async SQLAlchemy ORM
 
-5. **MQTT Broker (Mosquitto)** - Port 1883
+5. MQTT Broker (Mosquitto) - Port 1883
    - Eclipse Mosquitto broker
    - Sensor data ingestion
 
-6. **Simulator** - Background service
+6. Simulator - Background service
    - Generates realistic sensor data
    - Publishes to MQTT topics
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 Predictive Maintenance/
@@ -88,7 +88,7 @@ Predictive Maintenance/
 
 See `PROJECT_STRUCTURE.md` for detailed structure.
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -112,7 +112,7 @@ MQTT_BROKER_HOST=mqtt
 MQTT_BROKER_PORT=1883
 ```
 
-## 📚 API Documentation
+## API Documentation
 
 ### Key Endpoints
 
@@ -143,33 +143,33 @@ POST /users/login
 Authorization: Bearer <access_token>
 ```
 
-## 🛠️ Development
+## Development
 
 ### Local Development (Without Docker)
 
-**Backend:**
-  ```bash
-  cd backend
+Backend:
+```bash
+cd backend
 python -m venv .venv
 .venv\Scripts\activate  # Windows
-  pip install -r requirements.txt
-  alembic upgrade head
-  uvicorn app.main:app --reload
-  ```
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn app.main:app --reload
+```
 
-**Frontend:**
-  ```bash
-  cd frontend
-  npm install
-  npm run dev
-  ```
+Frontend:
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-**AI Service:**
-  ```bash
-  cd ai_service
-  pip install -r requirements.txt
-  uvicorn main:app --reload --port 8001
-  ```
+AI Service:
+```bash
+cd ai_service
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8001
+```
 
 ### Database Migrations
 
@@ -188,7 +188,7 @@ alembic upgrade head
 docker-compose exec backend python -m app.tasks.seed_demo_data
 ```
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Backend tests
@@ -201,22 +201,22 @@ curl http://localhost:8000/status
 curl http://localhost:8001/health
 ```
 
-## 📊 Features
+## Features
 
 ### Core Features
 
-- ✅ **Real-time Sensor Data Ingestion** - MQTT-based sensor data collection
-- ✅ **AI-Powered Anomaly Detection** - Isolation Forest with rule-based fallback
-- ✅ **Predictive Maintenance** - Failure prediction and RUL estimation
-- ✅ **Alarm Management** - Automatic alarm generation and resolution
-- ✅ **Ticket System** - Work order and maintenance ticket management
-- ✅ **Role-Based Access Control** - Admin, Engineer, Viewer roles
-- ✅ **Dashboard** - Real-time monitoring and statistics
-- ✅ **Reports** - PDF/CSV report generation
-- ✅ **Audit Logging** - Comprehensive activity tracking
-- ✅ **Webhooks** - External system integration
-- ✅ **File Attachments** - Support for ticket/alarm attachments
-- ✅ **Comments** - Collaborative comments on alarms/tickets
+- Real-time Sensor Data Ingestion - MQTT-based sensor data collection
+- AI-Powered Anomaly Detection - Isolation Forest with rule-based fallback
+- Predictive Maintenance - Failure prediction and RUL estimation
+- Alarm Management - Automatic alarm generation and resolution
+- Ticket System - Work order and maintenance ticket management
+- Role-Based Access Control - Admin, Engineer, Viewer roles
+- Dashboard - Real-time monitoring and statistics
+- Reports - PDF/CSV report generation
+- Audit Logging - Comprehensive activity tracking
+- Webhooks - External system integration
+- File Attachments - Support for ticket/alarm attachments
+- Comments - Collaborative comments on alarms/tickets
 
 ### Real-time Features
 
@@ -225,7 +225,7 @@ curl http://localhost:8001/health
 - Live dashboard with auto-refresh
 - Real-time sensor data visualization
 
-## 🔒 Security
+## Security
 
 - JWT-based authentication with refresh tokens
 - Password hashing with bcrypt
@@ -234,7 +234,7 @@ curl http://localhost:8001/health
 - CORS configuration
 - Input validation with Pydantic
 
-## 📈 Monitoring
+## Monitoring
 
 ### Health Checks
 
@@ -249,7 +249,7 @@ curl http://localhost:8001/health
 - `GET /ai/status` - AI service status and metrics
 - `GET /mqtt/status` - MQTT broker and consumer status
 
-## 🐳 Docker Commands
+## Docker Commands
 
 ```bash
 # Start services
@@ -271,7 +271,7 @@ docker-compose restart [service-name]
 docker-compose exec backend python -m app.tasks.seed_demo_data
 ```
 
-## 🚨 Troubleshooting
+## Troubleshooting
 
 ### Services Won't Start
 
@@ -298,7 +298,7 @@ docker-compose exec backend python -m app.tasks.seed_demo_data
 2. Check simulator: `docker-compose logs simulator`
 3. Verify MQTT topics in backend configuration
 
-## 📖 Additional Documentation
+## Additional Documentation
 
 - `QUICK_START.md` - Quick start guide
 - `PROJECT_STRUCTURE.md` - Detailed project structure
@@ -306,7 +306,7 @@ docker-compose exec backend python -m app.tasks.seed_demo_data
 - `docs/db-schema.md` - Database schema
 - `docs/tests.md` - Testing documentation
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -314,18 +314,14 @@ docker-compose exec backend python -m app.tasks.seed_demo_data
 4. Run tests and linting
 5. Submit a pull request
 
-## 📝 License
+## License
 
 This project is proprietary software.
 
-## 🆘 Support
+## Support
 
 For issues and questions:
 - Check the troubleshooting section
 - Review service logs
 - Check API documentation at `/docs`
 - Verify system status at `/status`
-
----
-
-**Built with ❤️ for Industrial IoT Predictive Maintenance**
