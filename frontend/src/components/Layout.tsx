@@ -5,14 +5,24 @@ import Topbar from "./Topbar";
 
 export default function Layout() {
     const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
 
     const closeMobileNav = React.useCallback(() => {
         setMobileNavOpen(false);
     }, []);
 
+    const toggleSidebar = React.useCallback(() => {
+        setSidebarCollapsed(prev => !prev);
+    }, []);
+
     return (
         <div className="min-h-screen bg-[#FAFAFF] flex">
-            <Sidebar isOpen={mobileNavOpen} onClose={closeMobileNav} />
+            <Sidebar 
+                isOpen={mobileNavOpen} 
+                onClose={closeMobileNav} 
+                isCollapsed={sidebarCollapsed}
+                onToggle={toggleSidebar}
+            />
 
             {mobileNavOpen ? (
                 <button
@@ -23,7 +33,7 @@ export default function Layout() {
                 />
             ) : null}
 
-            <div className="flex-1 ml-0 lg:ml-64 min-w-0">
+            <div className={`flex-1 ml-0 min-w-0 transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}`}>
                 <Topbar onMenuClick={() => setMobileNavOpen(true)} />
                 <main className="p-4 sm:p-6">
                     <Outlet />

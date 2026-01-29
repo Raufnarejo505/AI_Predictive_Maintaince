@@ -35,6 +35,8 @@ interface NavSection {
 type SidebarProps = {
     isOpen?: boolean;
     onClose?: () => void;
+    isCollapsed?: boolean;
+    onToggle?: () => void;
 };
 
 function NavIcon({ name, active }: { name: IconName; active: boolean }) {
@@ -212,7 +214,7 @@ const navSections: NavSection[] = [
     },
 ];
 
-export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
+export default function Sidebar({ isOpen = false, onClose, isCollapsed = false, onToggle }: SidebarProps) {
     const location = useLocation();
     const { user } = useAuth();
     const t = useT();
@@ -288,8 +290,10 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         const base = depth === 0 ? "px-4 py-2.5" : "px-4 py-2";
         const text = depth === 0 ? "text-[15px]" : "text-[13px]";
         const indent = depth === 0 ? "" : "pl-11";
+        const collapsedBase = isCollapsed ? "px-2 py-2.5 justify-center" : base;
+        const collapsedIndent = isCollapsed ? "" : indent;
 
-        const className = `group flex items-center gap-3 ${base} ${indent} rounded-xl transition-colors ${
+        const className = `group flex items-center ${collapsedBase} ${collapsedIndent} rounded-xl transition-colors overflow-hidden ${
             active
                 ? "bg-gradient-to-r from-purple-100/80 to-purple-50 text-[#4C1D95]"
                 : "text-[#4B5563] hover:bg-purple-50/70 hover:text-[#1F2937]"
@@ -297,10 +301,12 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
         const content = (
             <>
-                <div className={depth === 0 ? "flex items-center justify-center w-6" : "hidden"}>
+                <div className="flex items-center justify-center w-6 flex-shrink-0">
                     <NavIcon name={item.icon} active={active} />
                 </div>
-                <span className={`font-medium ${text}`}>{item.label}</span>
+                {!isCollapsed && (
+                    <span className={`font-medium ${text} whitespace-nowrap overflow-hidden text-ellipsis`}>{item.label}</span>
+                )}
             </>
         );
 
@@ -330,25 +336,28 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
     return (
         <aside
-            className={`fixed left-0 top-0 h-full w-64 z-40 overflow-y-auto transition-transform duration-200 ease-out
+            className={`fixed left-0 top-0 h-full z-40 overflow-hidden transition-all duration-300 ease-in-out
+                ${isCollapsed ? "w-16" : "w-64"}
                 ${isOpen ? "translate-x-0" : "-translate-x-full"}
                 lg:translate-x-0`}
         >
-            <div className="p-6">
+            <div className={`${isCollapsed ? "p-2" : "p-6"} h-full overflow-y-auto`}>
                 <div className="rounded-[28px] bg-white/80 border border-purple-100 shadow-[0_12px_40px_rgba(139,92,246,0.12)] backdrop-blur px-4 py-5">
-                    <div className="flex items-center gap-3 px-2 pb-4">
-                        <div className="w-9 h-9 rounded-2xl bg-purple-100/70 border border-purple-200 flex items-center justify-center">
+                    <div className="flex items-center justify-center px-2 pb-4">
+                        <button
+                            type="button"
+                            aria-label={isCollapsed ? "Sidebar erweitern" : "Dashboard"}
+                            onClick={onToggle}
+                            className="group flex items-center justify-center w-12 h-12 rounded-2xl bg-purple-100/70 border border-purple-200 hover:bg-purple-200/70 transition-all duration-200 flex-shrink-0"
+                        >
                             <NavIcon name="home" active={true} />
-                        </div>
-                        <div className="leading-tight">
-                            <div className="text-[18px] font-semibold text-[#6D28D9]">{t("app.name")}</div>
-                        </div>
+                        </button>
                         {onClose ? (
                             <button
                                 type="button"
                                 aria-label="Navigation schließen"
                                 onClick={onClose}
-                                className="ml-auto lg:hidden inline-flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-purple-50 transition-colors"
+                                className="ml-auto lg:hidden inline-flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-purple-50 transition-colors flex-shrink-0"
                             >
                                 <svg className="w-4 h-4 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M18 6 6 18" />
@@ -358,17 +367,17 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                         ) : null}
                     </div>
 
-                    <nav className="space-y-4">
+                    <nav className={`${isCollapsed ? 'space-y-2' : 'space-y-4'}`}>
                         {filteredSections.map((section, idx) => (
                             <div key={section.title || idx} className="space-y-2">
-                                {section.title ? (
+                                {!isCollapsed && section.title ? (
                                     <>
                                         <div className="h-px bg-slate-200/70 my-2" />
-                                        <div className="px-3 pt-2 text-xs font-semibold tracking-wide text-[#9CA3AF]">
+                                        <div className="px-3 pt-2 text-xs font-semibold tracking-wide text-[#9CA3AF] truncate">
                                             {section.title}
                                         </div>
                                     </>
-                                ) : idx !== 0 ? (
+                                ) : !isCollapsed && idx !== 0 ? (
                                     <div className="h-px bg-slate-200/70 my-2" />
                                 ) : null}
 

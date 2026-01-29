@@ -29,9 +29,9 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
     return (
         <div className="bg-white/90 border-b border-slate-200 backdrop-blur-xl sticky top-0 z-50 shadow-sm">
             <div className="max-w-7xl mx-auto px-4 lg:px-8 py-3">
-                <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center justify-between">
                     {/* Left Section */}
-                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                    <div className="flex items-center gap-4">
                         {onMenuClick ? (
                             <button
                                 type="button"
@@ -46,7 +46,7 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
                                 </svg>
                             </button>
                         ) : null}
-                        <div>
+                        <div className="bg-white/90 border border-slate-200 rounded-xl px-4 py-2 shadow-sm">
                             <h2 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-purple-500">
                                 {t("app.name")}
                             </h2>
@@ -55,9 +55,9 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
                     </div>
 
                     {/* Right Section */}
-                    <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="flex items-center gap-6">
                         {/* Status Indicators */}
-                        <div className="hidden sm:flex items-center gap-2">
+                        <div className="hidden sm:flex items-center">
                             {aiLoading ? (
                                 <div className="h-7 w-20 bg-slate-100 rounded-lg animate-pulse" />
                             ) : (
@@ -69,19 +69,14 @@ export default function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
                         </div>
 
                         {/* User Info */}
-                        <div className="flex items-center gap-3 sm:pl-4 sm:border-l sm:border-slate-200">
-                            <div className="text-right">
-                                <p className="text-sm font-medium text-slate-900">
-                                    {user?.full_name || user?.email || t("topbar.user")}
-                                </p>
-                                <span
-                                    className={`text-xs px-2 py-0.5 rounded-lg border font-medium ${getRoleBadgeColor(
-                                        user?.role || ""
-                                    )}`}
-                                >
-                                    {user?.role?.toUpperCase() || "VIEWER"}
-                                </span>
-                            </div>
+                        <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+                            <span
+                                className={`text-xs px-2 py-0.5 rounded-lg border font-medium ${getRoleBadgeColor(
+                                    user?.role || ""
+                                )}`}
+                            >
+                                {user?.role?.toUpperCase() || "VIEWER"}
+                            </span>
                             <button
                                 onClick={logout}
                                 className="px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-purple-50 hover:border-purple-200 transition-all text-sm font-medium"

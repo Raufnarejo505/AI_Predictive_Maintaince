@@ -148,16 +148,16 @@ export default function Dashboard() {
                 <h2 className="text-lg font-semibold text-slate-900 mb-1">Produktionskonfiguration</h2>
                 <p className="text-sm text-slate-600">Maschine und Material für die Überwachung</p>
               </div>
-              <div className="flex gap-6">
-                <div className="flex-1 min-w-[120px]">
+              <div className="flex gap-8">
+                <div className="min-w-[140px]">
                   <label className="block text-xs font-medium text-slate-500 mb-1">Maschine</label>
-                  <div className="w-full bg-white border border-slate-300 rounded-md px-4 py-3 text-sm font-medium text-slate-900 whitespace-nowrap">
+                  <div className="bg-white border border-slate-300 rounded-md px-4 py-2.5 text-sm font-medium text-slate-900 whitespace-nowrap text-center">
                     {selectedMachine}
                   </div>
                 </div>
-                <div className="flex-1 min-w-[120px]">
+                <div className="min-w-[140px]">
                   <label className="block text-xs font-medium text-slate-500 mb-1">Material</label>
-                  <div className="w-full bg-white border border-slate-300 rounded-md px-4 py-3 text-sm font-medium text-slate-900 whitespace-nowrap">
+                  <div className="bg-white border border-slate-300 rounded-md px-4 py-2.5 text-sm font-medium text-slate-900 whitespace-nowrap text-center">
                     {selectedMaterial}
                   </div>
                 </div>
@@ -212,7 +212,7 @@ export default function Dashboard() {
           {/* Schneckendrehzahl */}
           <div className="bg-white/90 rounded-xl p-6 border border-slate-200 shadow-sm relative overflow-hidden">
             <div className="relative z-10">
-              <div className="text-sm font-medium text-slate-500 mb-2">1️⃣ Schneckendrehzahl (ScrewSpeed_rpm)</div>
+              <div className="text-sm font-medium text-slate-500 mb-2">Schneckendrehzahl (ScrewSpeed_rpm)</div>
               <div className="text-5xl font-bold mb-2">
                 <span className={
                   mssqlDerived?.risk?.sensors?.ScrewSpeed_rpm === 'red' ? 'text-rose-600' :
@@ -244,7 +244,7 @@ export default function Dashboard() {
           {/* Schmelzedruck */}
           <div className="bg-white/90 rounded-xl p-6 border border-slate-200 shadow-sm relative overflow-hidden">
             <div className="relative z-10">
-              <div className="text-sm font-medium text-slate-500 mb-2">2️⃣ Schmelzedruck (Pressure_bar)</div>
+              <div className="text-sm font-medium text-slate-500 mb-2">Schmelzedruck (Pressure_bar)</div>
               <div className="text-5xl font-bold mb-2">
                 <span className={
                   mssqlDerived?.risk?.sensors?.Pressure_bar === 'red' ? 'text-rose-600' :
@@ -276,7 +276,7 @@ export default function Dashboard() {
           {/* Durchschnittstemperatur */}
           <div className="bg-white/90 rounded-xl p-6 border border-slate-200 shadow-sm relative overflow-hidden">
             <div className="relative z-10">
-              <div className="text-sm font-medium text-slate-500 mb-2">4️⃣ Durchschnittstemperatur (Temp_Avg)</div>
+              <div className="text-sm font-medium text-slate-500 mb-2">Durchschnittstemperatur (Temp_Avg)</div>
               <div className="text-5xl font-bold mb-2">
                 <span className={
                   mssqlDerived?.risk?.overall === 'red' ? 'text-rose-600' :
@@ -311,7 +311,7 @@ export default function Dashboard() {
           {/* Temperaturspreizung */}
           <div className="bg-white/90 rounded-xl p-6 border border-slate-200 shadow-sm relative overflow-hidden">
             <div className="relative z-10">
-              <div className="text-sm font-medium text-slate-500 mb-2">5️⃣ Temperaturspreizung (Temp_Spread)</div>
+              <div className="text-sm font-medium text-slate-500 mb-2">Temperaturspreizung (Temp_Spread)</div>
               <div className="text-5xl font-bold mb-2">
                 <span className={
                   (mssqlDerived?.derived?.Temp_Spread?.current || 0) > 8 ? 'text-rose-600' :
@@ -342,7 +342,7 @@ export default function Dashboard() {
 
         {/* Temperaturzonen */}
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">3️⃣ Temperaturzonen (Zone 1–4)</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-4">Temperaturzonen (Zone 1–4)</h2>
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
             {['Zone1_C', 'Zone2_C', 'Zone3_C', 'Zone4_C'].map((zone, index) => (
               <div key={zone} className="bg-white/90 rounded-xl p-4 border border-slate-200 shadow-sm">
@@ -376,8 +376,24 @@ export default function Dashboard() {
 
         {/* Stabilität */}
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">6️⃣ Stabilität (Time Spread / Fluktuation)</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-4">Stabilität (Time Spread / Fluktuation)</h2>
           <div className="bg-white/90 rounded-xl p-6 border border-slate-200 shadow-sm">
+            <div className="text-xs text-slate-500 mb-4">
+              <strong>Berechnung:</strong> stability_ratio = window_std / baseline_std
+              <br />
+              <span className="ml-2">window_std = Standardabweichung über gleitendem Fenster</span>
+              <br />
+              <span className="ml-2">baseline_std = Gelernte Basis-Standardabweichung</span>
+            </div>
+            <div className="text-xs text-slate-500 mb-4">
+              <strong>Referenz:</strong>
+              <br />
+              <span className="ml-2">🟢 Optimal: stability_ratio ≤ 1.2</span>
+              <br />
+              <span className="ml-2">🟠 Akzeptabel: 1.2 &lt; stability_ratio ≤ 2.0</span>
+              <br />
+              <span className="ml-2">🔴 Kritisch: stability_ratio &gt; 2.0</span>
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <div className="text-sm font-medium text-slate-500 mb-2">Prozessstabilität</div>
@@ -414,7 +430,7 @@ export default function Dashboard() {
 
         {/* Prozessbewertung */}
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-slate-900 mb-4">7️⃣ Prozessbewertung (Gesamttext)</h2>
+          <h2 className="text-xl font-semibold text-slate-900 mb-4">Prozessbewertung (Gesamttext)</h2>
           <div className="bg-white/90 rounded-xl p-6 border border-slate-200 shadow-sm">
             <div className="text-lg font-medium text-slate-900 mb-3">
               {mssqlDerived?.risk?.overall === 'green' && "🟢 GRÜNER PROZESSZUSTAND"}
