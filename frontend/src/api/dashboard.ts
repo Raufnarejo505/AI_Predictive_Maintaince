@@ -2,7 +2,7 @@
  * Dashboard API - Enhanced with live data generation fallback
  */
 import api from "./index";
-import { DashboardOverview, MachineSummary } from "../types/api";
+import { DashboardOverview } from "../types/api";
 
 export const dashboardApi = {
     /**
@@ -26,8 +26,34 @@ export const dashboardApi = {
     /**
      * Get machine summary with live data
      */
-    async getMachineSummary(machineId: string): Promise<MachineSummary> {
-        const response = await api.get<MachineSummary>(`/machines/${machineId}/summary`);
+    async getMachineSummary(machineId: string): Promise<any> {
+        const response = await api.get<any>(`/machines/${machineId}/summary`);
+        return response.data;
+    },
+
+    /**
+     * Get MSSQL extruder latest rows
+     */
+    async getExtruderLatest(): Promise<{ rows: any[] }> {
+        const response = await api.get<{ rows: any[] }>("/dashboard/extruder/latest");
+        return response.data;
+    },
+
+    /**
+     * Get MSSQL extruder connection status
+     */
+    async getExtruderStatus(): Promise<any> {
+        const response = await api.get<any>("/dashboard/extruder/status");
+        return response.data;
+    },
+
+    /**
+     * Get MSSQL extruder derived KPIs, baseline, and risk indicators
+     */
+    async getExtruderDerived(windowMinutes: number = 30): Promise<any> {
+        const response = await api.get<any>("/dashboard/extruder/derived", {
+            params: { window_minutes: windowMinutes },
+        });
         return response.data;
     },
 };

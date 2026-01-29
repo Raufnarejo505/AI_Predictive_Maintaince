@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
-from typing import Dict, Any
+from typing import Dict, Any, List, Tuple
 from functools import lru_cache
 import time
 import os
 import re
+import statistics
 
 from fastapi import APIRouter, Depends, Query, HTTPException
 from loguru import logger
@@ -275,6 +276,216 @@ async def get_extruder_status(
         "last_success_at": _extruder_last_success_at.isoformat() if _extruder_last_success_at else None,
         "last_error_at": _extruder_last_error_at.isoformat() if _extruder_last_error_at else None,
         "last_error": _extruder_last_error,
+    }
+
+
+@router.get("/extruder/derived")
+async def get_extruder_derived_kpis(
+    current_user: User = Depends(require_viewer),
+    window_minutes: int = Query(30, ge=5, le=1440, description="Time window in minutes to analyze"),
+) -> Dict[str, Any]:
+    """
+    Step 1–4: Read recent data, compute baseline, derived metrics, and risk indicators.
+    Returns:
+      - window_minutes: requested window
+      - rows: raw rows in the window
+      - baseline: per-sensor rolling baseline (mean) and normal range (mean ± 1 std)
+      - derived: Temp_Avg, Temp_Spread, stability flags
+      - risk: per-sensor risk level (green/yellow/red) and overall risk
+    """
+    import pymssql
+    from datetime import datetime, timedelta
+
+    global _extruder_last_attempt_at, _extruder_last_success_at, _extruder_last_error_at, _extruder_last_error
+    _extruder_last_attempt_at = datetime.utcnow()
+
+    # Load config from environment
+    host = os.getenv("MSSQL_HOST")
+    port_raw = os.getenv("MSSQL_PORT", "1433")
+    user = os.getenv("MSSQL_USER")
+    password = os.getenv("MSSQL_PASSWORD")
+    database = (os.getenv("MSSQL_DATABASE") or "HISTORISCH").strip()
+    table_raw = (os.getenv("MSSQL_TABLE") or "Tab_Actual").strip()
+    schema_raw = (os.getenv("MSSQL_SCHEMA") or "dbo").strip()
+
+    schema = schema_raw
+    table = table_raw
+    if "." in table_raw:
+        parts = [p for p in table_raw.split(".") if p]
+        if len(parts) == 2:
+            schema, table = parts[0], parts[1]
+
+    # Validate config
+    try:
+        port = int(port_raw)
+    except Exception:
+        _extruder_last_error_at = datetime.utcnow()
+        _extruder_last_error = "Invalid MSSQL_PORT"
+        raise HTTPException(status_code=500, detail="Invalid MSSQL_PORT")
+
+    if not (host and user and password):
+        _extruder_last_error_at = datetime.utcnow()
+        _extruder_last_error = "Missing MSSQL connection config"
+        raise HTTPException(status_code=500, detail="Missing MSSQL connection config")
+
+    # Step 1: Read latest data within time window
+    cutoff = datetime.utcnow() - timedelta(minutes=window_minutes)
+    conn = None
+    try:
+        conn = pymssql.connect(
+            server=host,
+            port=port,
+            user=user,
+            password=password,
+            database=database,
+            as_dict=True,
+            login_timeout=10,
+        )
+        cursor = conn.cursor()
+        # Use SQL 2000 compatible syntax
+        sql = f"""
+        SELECT TOP 200
+            TrendDate,
+            Val_4 AS ScrewSpeed_rpm,
+            Val_6 AS Pressure_bar,
+            Val_7 AS Temp_Zone1_C,
+            Val_8 AS Temp_Zone2_C,
+            Val_9 AS Temp_Zone3_C,
+            Val_10 AS Temp_Zone4_C
+        FROM [{schema}].[{table}]
+        WHERE TrendDate >= DATEADD(minute, -{window_minutes}, GETDATE())
+        ORDER BY TrendDate DESC
+        """
+        cursor.execute(sql)
+        rows_raw = cursor.fetchall()
+        # Ensure TrendDate is datetime
+        rows = []
+        for r in rows_raw:
+            td = r.get("TrendDate")
+            if isinstance(td, datetime):
+                rows.append(r)
+        # Reverse to chronological order (oldest first)
+        rows = list(reversed(rows))
+        _extruder_last_success_at = datetime.utcnow()
+        _extruder_last_error = None
+        _extruder_last_error_at = None
+    except Exception as e:
+        _extruder_last_error_at = datetime.utcnow()
+        _extruder_last_error = str(e)
+        logger.error(f"MSSQL extruder/derived error: {e}")
+        raise HTTPException(status_code=502, detail=f"MSSQL error: {e}")
+    finally:
+        try:
+            if conn:
+                conn.close()
+        except Exception:
+            pass
+
+    if not rows:
+        return {
+            "window_minutes": window_minutes,
+            "rows": [],
+            "baseline": {},
+            "derived": {},
+            "risk": {"overall": "unknown", "sensors": {}},
+        }
+
+    # Helper to extract numeric values safely
+    def as_float(val):
+        try:
+            return float(val) if val is not None else None
+        except Exception:
+            return None
+
+    # Step 2: Baseline calculation per sensor
+    sensor_keys = ["ScrewSpeed_rpm", "Pressure_bar", "Temp_Zone1_C", "Temp_Zone2_C", "Temp_Zone3_C", "Temp_Zone4_C"]
+    baseline = {}
+    for key in sensor_keys:
+        values = [as_float(r.get(key)) for r in rows if as_float(r.get(key)) is not None]
+        if values:
+            mean_val = statistics.mean(values)
+            std_val = statistics.stdev(values) if len(values) > 1 else 0.0
+            baseline[key] = {
+                "mean": round(mean_val, 3),
+                "std": round(std_val, 3),
+                "min_normal": round(mean_val - std_val, 3),
+                "max_normal": round(mean_val + std_val, 3),
+                "count": len(values),
+            }
+        else:
+            baseline[key] = {"mean": None, "std": None, "min_normal": None, "max_normal": None, "count": 0}
+
+    # Step 3: Derived metrics
+    derived = {}
+    # Temperature averages per row
+    temp_keys = ["Temp_Zone1_C", "Temp_Zone2_C", "Temp_Zone3_C", "Temp_Zone4_C"]
+    for r in rows:
+        temps = [as_float(r.get(k)) for k in temp_keys if as_float(r.get(k)) is not None]
+        if temps:
+            r["Temp_Avg"] = round(statistics.mean(temps), 3)
+            r["Temp_Spread"] = round(max(temps) - min(temps), 3)
+        else:
+            r["Temp_Avg"] = None
+            r["Temp_Spread"] = None
+    # Overall derived aggregates
+    all_temp_avg = [r["Temp_Avg"] for r in rows if r.get("Temp_Avg") is not None]
+    all_temp_spread = [r["Temp_Spread"] for r in rows if r.get("Temp_Spread") is not None]
+    derived["Temp_Avg"] = {
+        "current": rows[-1].get("Temp_Avg") if rows else None,
+        "mean": round(statistics.mean(all_temp_avg), 3) if all_temp_avg else None,
+        "std": round(statistics.stdev(all_temp_avg), 3) if len(all_temp_avg) > 1 else None,
+    }
+    derived["Temp_Spread"] = {
+        "current": rows[-1].get("Temp_Spread") if rows else None,
+        "mean": round(statistics.mean(all_temp_spread), 3) if all_temp_spread else None,
+        "std": round(statistics.stdev(all_temp_spread), 3) if len(all_temp_spread) > 1 else None,
+    }
+    # Stability indicators: % of points within normal range
+    stability = {}
+    for key in sensor_keys:
+        vals = [as_float(r.get(key)) for r in rows if as_float(r.get(key)) is not None]
+        base = baseline.get(key, {})
+        min_n = base.get("min_normal")
+        max_n = base.get("max_normal")
+        if min_n is not None and max_n is not None and vals:
+            stable_count = sum(1 for v in vals if min_n <= v <= max_n)
+            stability[key] = round(100 * stable_count / len(vals), 1)
+        else:
+            stability[key] = None
+    derived["stability_percent"] = stability
+
+    # Step 4: Risk logic (green/yellow/red) per sensor
+    def risk_level(value, baseline):
+        if value is None or baseline.get("mean") is None:
+            return "unknown"
+        mean = baseline["mean"]
+        std = baseline.get("std", 0)
+        if std == 0:
+            return "green"
+        # Z-score based thresholds
+        z = abs(value - mean) / std
+        if z <= 1:
+            return "green"
+        elif z <= 2:
+            return "yellow"
+        else:
+            return "red"
+
+    risk_sensors = {}
+    current_row = rows[-1] if rows else {}
+    for key in sensor_keys:
+        val = as_float(current_row.get(key))
+        risk_sensors[key] = risk_level(val, baseline.get(key, {}))
+    # Overall risk: worst sensor risk
+    risk_order = {"green": 0, "yellow": 1, "red": 2, "unknown": -1}
+    overall_risk = max(risk_sensors.values(), key=lambda x: risk_order.get(x, -1)) if risk_sensors else "unknown"
+
+    return {
+        "window_minutes": window_minutes,
+        "rows": rows,
+        "baseline": baseline,
+        "derived": derived,
+        "risk": {"overall": overall_risk, "sensors": risk_sensors},
     }
 
 
