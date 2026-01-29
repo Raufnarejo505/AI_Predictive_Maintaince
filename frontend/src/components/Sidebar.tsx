@@ -13,7 +13,6 @@ type IconName =
     | "tickets"
     | "reports"
     | "ai"
-    | "mqtt"
     | "opcua"
     | "settings"
     | "notifications"
@@ -134,15 +133,6 @@ function NavIcon({ name, active }: { name: IconName; active: boolean }) {
                     <path d="M15 10h.01" />
                 </Svg>
             );
-        case "mqtt":
-            return (
-                <Svg>
-                    <path d="M6 11a6 6 0 0 1 12 0" />
-                    <path d="M8.5 11a3.5 3.5 0 0 1 7 0" />
-                    <path d="M12 16h.01" />
-                    <path d="M12 16v5" />
-                </Svg>
-            );
         case "opcua":
             return (
                 <Svg>
@@ -202,7 +192,6 @@ const navSections: NavSection[] = [
         title: "AI & Integration",
         items: [
             { path: "/ai", label: "AI Service", icon: "ai", requireRole: ["engineer", "admin"] },
-            { path: "/mqtt", label: "MQTT Status", icon: "mqtt", requireRole: ["engineer", "admin"] },
             { path: "/opcua", label: "OPC UA Wizard", icon: "opcua", requireRole: ["engineer", "admin"] },
         ],
     },
@@ -265,7 +254,6 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                 title: t("nav.aiIntegration"),
                 items: [
                     { path: "/ai", label: t("nav.aiService"), icon: "ai", requireRole: ["engineer", "admin"] },
-                    { path: "/mqtt", label: t("nav.mqttStatus"), icon: "mqtt", requireRole: ["engineer", "admin"] },
                     { path: "/opcua", label: t("nav.opcuaWizard"), icon: "opcua", requireRole: ["engineer", "admin"] },
                 ],
             },

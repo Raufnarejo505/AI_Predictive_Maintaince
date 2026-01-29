@@ -34,7 +34,7 @@ export function OfflineIndicator() {
     }, []);
 
     const isOffline = !status.backend;
-    const allServicesUp = status.backend && status.ai && status.mqtt;
+    const allServicesUp = status.backend && status.ai;
 
     return (
         <div className="fixed bottom-4 right-4 z-50">
@@ -64,7 +64,6 @@ export function OfflineIndicator() {
                                 {[
                                     status.backend && t("offline.backend"),
                                     status.ai && t("offline.ai"),
-                                    status.mqtt && t("offline.mqtt"),
                                 ]
                                     .filter(Boolean)
                                     .join(", ")}

@@ -26,7 +26,6 @@ export const de = {
         reports: "Berichte",
         aiIntegration: "KI & Integration",
         aiService: "KI-Dienst",
-        mqttStatus: "MQTT-Status",
         opcuaWizard: "OPC-UA-Assistent",
         settings: "Einstellungen",
         connections: "Verbindungen",
@@ -96,7 +95,6 @@ export const de = {
         logout: "Abmelden",
         user: "Benutzer",
         statusAi: "KI",
-        statusMqtt: "MQTT",
     },
     status: {
         healthy: "Gesund",
@@ -122,7 +120,6 @@ export const de = {
         services: "Dienste",
         backend: "Backend",
         ai: "KI",
-        mqtt: "MQTT",
     },
     charts: {
         loadingChart: "Diagramm wird geladen...",

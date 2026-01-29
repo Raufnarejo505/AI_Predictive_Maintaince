@@ -1,5 +1,5 @@
 import React from "react";
-import { useAIStatus, useMQTTStatus } from "../hooks/useLiveData";
+import { useAIStatus } from "../hooks/useLiveData";
 import { useT } from "../i18n/I18nProvider";
 
 interface ServiceStatusCardProps {
@@ -8,7 +8,6 @@ interface ServiceStatusCardProps {
 
 export default function ServiceStatusCard({ label }: ServiceStatusCardProps) {
     const { data: aiStatus } = useAIStatus();
-    const { data: mqttStatus } = useMQTTStatus();
     const t = useT();
 
     const getStatus = () => {
@@ -21,21 +20,13 @@ export default function ServiceStatusCard({ label }: ServiceStatusCardProps) {
                     ? "bg-emerald-50 border-emerald-200 text-[#1F2937]"
                     : "bg-rose-50 border-rose-200 text-[#1F2937]",
             };
-        } else if (label === "MQTT") {
-            const connected = mqttStatus?.connected || false;
-            return {
-                status: connected ? t("status.connected") : t("status.disconnected"),
-                color: connected
-                    ? "bg-purple-50 border-purple-200 text-[#1F2937]"
-                    : "bg-rose-50 border-rose-200 text-[#1F2937]",
-            };
         }
         return { status: t("status.unknown"), color: "bg-purple-50 border-purple-200 text-[#1F2937]" };
     };
 
     const { status, color } = getStatus();
 
-    const displayLabel = label === "AI Service" ? t("nav.aiService") : label === "MQTT" ? t("nav.mqttStatus") : label;
+    const displayLabel = label === "AI Service" ? t("nav.aiService") : label;
 
     return (
         <div className={`px-5 py-3 rounded-2xl border ${color} text-sm font-medium shadow-sm`}>
