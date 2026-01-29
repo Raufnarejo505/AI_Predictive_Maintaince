@@ -32,12 +32,24 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isResetting, setIsResetting] = useState(false);
   const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [selectedMachine, setSelectedMachine] = useState<string>('01: Weber 44');
+  const [selectedMaterial, setSelectedMaterial] = useState<string>('Material 1');
   
   const backendStatus = useBackendStore((state) => state.status);
   const { data: opcuaStatus } = useOPCUAStatus();
   const mountedRef = useRef(true);
   const lastFetchRef = useRef<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const machines = [
+    '01: Weber 44', '02: Weber 45', '03: Weber 60', '05: Weber 45', '06: Weber 45',
+    '08: Weber 45', '09: CM 60 Alpha', '10: Modul 60', '11: Modul 60', '12: Weber 60',
+    '13: CMS 60-25 B', '14: Weber 60', '15: ZKM 60', '16: KMD 50 DS', '17: IDE MSK 52 DS',
+    '18: CMT 45', '19: CM Titan 68 PVC', '20: CM Proton 90-25 BL', '21: CM Konos 63 P',
+    '22: CM 50 DS Nr 15790', '24: -----', '26: CM 60 Alpha', '28: CM Titan 58R', '29: BEX 92-28V'
+  ];
+
+  const materials = ['Material 1', 'Material 2', 'Material 3'];
   
   useEffect(() => {
     mountedRef.current = true;
@@ -207,12 +219,52 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
       <div className="max-w-[1920px] mx-auto px-6 py-6">
         {/* Top Header Section */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">
-            {t('dashboard.headerTitle')}
-          </h1>
-          <p className="text-slate-600 text-sm mb-4">
-            {t('dashboard.headerSubtitle')}
-          </p>
+          {/* Machine and Material Selection - Prominent Position */}
+          <div className="bg-white/90 rounded-xl p-4 border border-slate-200 shadow-sm mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900 mb-1">Production Configuration</h2>
+                <p className="text-sm text-slate-600">Select machine and material for monitoring</p>
+              </div>
+              <div className="flex gap-6">
+                <div className="flex-1 max-w-xs">
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Machine</label>
+                  <select 
+                    value={selectedMachine}
+                    onChange={(e) => setSelectedMachine(e.target.value)}
+                    className="w-full bg-white border border-slate-300 rounded-md px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {machines.map(machine => (
+                      <option key={machine} value={machine}>{machine}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1 max-w-xs">
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Material</label>
+                  <select 
+                    value={selectedMaterial}
+                    onChange={(e) => setSelectedMaterial(e.target.value)}
+                    className="w-full bg-white border border-slate-300 rounded-md px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {materials.map(material => (
+                      <option key={material} value={material}>{material}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">
+                {t('dashboard.headerTitle')}
+              </h1>
+              <p className="text-slate-600 text-sm">
+                {t('dashboard.headerSubtitle')}
+              </p>
+            </div>
+          </div>
           
           {/* Status Cards Row */}
           <div className="flex gap-4 mb-4">
@@ -362,21 +414,8 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
                   {mssqlDerived?.risk?.overall ? mssqlDerived.risk.overall.toUpperCase() : '--'}
                 </span>
               </div>
-              <div className="flex items-center gap-2 mb-4">
-                {mssqlDerived?.risk?.overall && (
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    mssqlDerived.risk.overall === 'red' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
-                    mssqlDerived.risk.overall === 'yellow' ? 'bg-amber-50 text-amber-800 border border-amber-200' :
-                    'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  }`}>
-                    {mssqlDerived.risk.overall === 'red' ? 'Critical' :
-                     mssqlDerived.risk.overall === 'yellow' ? 'Warning' :
-                     mssqlDerived.risk.overall === 'green' ? 'Normal' : 'Unknown'}
-                  </span>
-                )}
-                {mssqlDerived?.window_minutes && (
-                  <span className="text-xs text-slate-500">({mssqlDerived.window_minutes}m window)</span>
-                )}
+              <div className="text-xs text-slate-600">
+                {selectedMachine}
               </div>
               {/* Mini risk bars */}
               {mssqlDerived?.risk?.sensors && (
@@ -416,49 +455,50 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
               <div className="text-5xl font-bold text-slate-900 mb-2">
                 {mssqlDerived?.derived?.Temp_Avg?.current ? `${mssqlDerived.derived.Temp_Avg.current}°C` : '--'}
               </div>
-              <div className="flex items-center gap-2 mb-4">
-                {mssqlDerived?.derived?.Temp_Avg?.mean && (
-                  <span className="bg-slate-50 text-slate-700 px-3 py-1 rounded text-sm font-medium border border-slate-200">
-                    Mean: {mssqlDerived.derived.Temp_Avg.mean}°C
+              <div className="text-xs text-slate-600">
+                {selectedMaterial}
+              </div>
+              {mssqlDerived?.derived?.Temp_Avg?.trend && (
+                <div className="flex items-center gap-1 mt-2">
+                  <span className={`text-lg ${
+                    mssqlDerived.derived.Temp_Avg.trend > 0 ? 'text-red-500' : 
+                    mssqlDerived.derived.Temp_Avg.trend < 0 ? 'text-blue-500' : 'text-gray-500'
+                  }`}>
+                    {mssqlDerived.derived.Temp_Avg.trend > 0 ? '↑' : 
+                     mssqlDerived.derived.Temp_Avg.trend < 0 ? '↓' : '→'}
                   </span>
-                )}
-              </div>
-              {/* Simple line placeholder */}
-              <div className="h-16 mt-4 opacity-30">
-                <svg viewBox="0 0 200 60" className="w-full h-full">
-                  <path
-                    d="M 0 40 Q 50 20, 100 35 T 200 30"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    fill="none"
-                  />
-                </svg>
-              </div>
+                  <span className="text-xs text-slate-500">
+                    {Math.abs(mssqlDerived.derived.Temp_Avg.trend).toFixed(1)}°C
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
           {/* TEMP SPREAD */}
           <div className="bg-white/90 rounded-xl p-6 border border-slate-200 shadow-sm relative overflow-hidden">
             <div className="relative z-10">
-              <div className="text-sm font-medium text-slate-500 mb-2">Temp Spread</div>
+              <div className="text-sm font-medium text-slate-500 mb-2">Temperature Spread</div>
               <div className="text-5xl font-bold text-slate-900 mb-2">
                 {mssqlDerived?.derived?.Temp_Spread?.current ? `${mssqlDerived.derived.Temp_Spread.current}°C` : '--'}
               </div>
-              <div className="flex items-center gap-2 mb-4">
-                {mssqlDerived?.derived?.Temp_Spread?.mean && (
-                  <span className="bg-slate-50 text-slate-700 px-3 py-1 rounded text-sm font-medium border border-slate-200">
-                    Mean: {mssqlDerived.derived.Temp_Spread.mean}°C
-                  </span>
-                )}
+              <div className="text-xs text-slate-600">
+                Zone variance
               </div>
-              {/* Simple spread indicator */}
-              <div className="h-16 mt-4 flex items-center justify-center opacity-30">
-                <div className="w-full bg-slate-200 rounded-full h-2 relative">
-                  <div className="absolute left-1/4 top-1/2 -translate-y-1/2 w-3 h-3 bg-slate-600 rounded-full" />
-                  <div className="absolute right-1/4 top-1/2 -translate-y-1/2 w-3 h-3 bg-slate-600 rounded-full" />
-                  <div className="absolute left-1/4 right-1/4 top-1/2 h-0.5 bg-slate-400" />
+              {mssqlDerived?.derived?.Temp_Spread?.current && (
+                <div className="mt-2">
+                  <div className="bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div 
+                      className={`h-full ${
+                        mssqlDerived.derived.Temp_Spread.current > 20 ? 'bg-red-500' :
+                        mssqlDerived.derived.Temp_Spread.current > 10 ? 'bg-amber-500' :
+                        'bg-green-500'
+                      }`}
+                      style={{width: `${Math.min(100, (mssqlDerived.derived.Temp_Spread.current / 30) * 100)}%`}}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -467,28 +507,11 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
             <div className="relative z-10">
               <div className="text-sm font-medium text-slate-500 mb-2">Stability</div>
               <div className="text-5xl font-bold text-slate-900 mb-2">
-                {mssqlDerived?.derived?.stability_percent ? (
-                  <span className={
-                    (Object.values(mssqlDerived.derived.stability_percent).find((v: any) => v !== null && v < 80)) ? 'text-amber-600' :
-                    (Object.values(mssqlDerived.derived.stability_percent).find((v: any) => v !== null && v < 60)) ? 'text-rose-600' :
-                    'text-emerald-600'
-                  }>
-                    {Math.round(Object.values(mssqlDerived.derived.stability_percent).reduce((a: number, b: any) => a + Number(b || 0), 0) / Object.values(mssqlDerived.derived.stability_percent).filter((v: any) => v !== null).length)}%
-                  </span>
-                ) : '--'}
+                {mssqlDerived?.derived?.stability_percent?.Pressure_bar ? 
+                  `${mssqlDerived.derived.stability_percent.Pressure_bar}%` : '--'}
               </div>
-              <div className="flex items-center gap-2 mb-4">
-                {mssqlDerived?.derived?.stability_percent && (
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    Object.values(mssqlDerived.derived.stability_percent).find((v: any) => v !== null && v < 80) ? 'bg-amber-50 text-amber-800 border border-amber-200' :
-                    Object.values(mssqlDerived.derived.stability_percent).find((v: any) => v !== null && v < 60) ? 'bg-rose-50 text-rose-700 border border-rose-200' :
-                    'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  }`}>
-                    {Object.values(mssqlDerived.derived.stability_percent).find((v: any) => v !== null && v < 80) ? 'Unstable' :
-                     Object.values(mssqlDerived.derived.stability_percent).find((v: any) => v !== null && v < 60) ? 'Critical' :
-                     'Stable'}
-                  </span>
-                )}
+              <div className="text-xs text-slate-600">
+                Process stability
               </div>
               {/* Simple stability bars */}
               {mssqlDerived?.derived?.stability_percent && (
@@ -519,6 +542,101 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* BASELINES SECTION */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-slate-900 mb-4">Baselines</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Current Baseline */}
+            <div className="bg-white/90 rounded-xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-lg font-medium text-slate-900 mb-4">Current Baseline</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-600">Screw Speed</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {mssqlDerived?.baseline?.ScrewSpeed_rpm?.mean ? 
+                      `${mssqlDerived.baseline.ScrewSpeed_rpm.mean.toFixed(1)} ± ${mssqlDerived.baseline.ScrewSpeed_rpm.std?.toFixed(1)}` : 
+                      '--'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-600">Pressure</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {mssqlDerived?.baseline?.Pressure_bar?.mean ? 
+                      `${mssqlDerived.baseline.Pressure_bar.mean.toFixed(1)} ± ${mssqlDerived.baseline.Pressure_bar.std?.toFixed(1)}` : 
+                      '--'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-600">Avg Temperature</span>
+                  <span className="text-sm font-medium text-slate-900">
+                    {mssqlDerived?.derived?.Temp_Avg?.baseline ? 
+                      `${mssqlDerived.derived.Temp_Avg.baseline.toFixed(1)}°C` : 
+                      '--'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Learning Mode */}
+            <div className="bg-white/90 rounded-xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-lg font-medium text-slate-900 mb-4">Learning Mode</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Status</span>
+                  <span className="px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-800 rounded-full">
+                    Active
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Samples Collected</span>
+                  <span className="text-sm font-medium text-slate-900">1,247</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Confidence</span>
+                  <span className="text-sm font-medium text-slate-900">94%</span>
+                </div>
+                <button className="w-full mt-4 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
+                  Save Current Baseline
+                </button>
+              </div>
+            </div>
+
+            {/* Baseline History */}
+            <div className="bg-white/90 rounded-xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-lg font-medium text-slate-900 mb-4">Baseline History</h3>
+              <div className="space-y-2">
+                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium text-slate-900">Current</span>
+                    <span className="text-xs text-slate-500">Active now</span>
+                  </div>
+                  <div className="text-xs text-slate-600">
+                    {selectedMachine} • {selectedMaterial}
+                  </div>
+                </div>
+                <div className="p-3 bg-white rounded-lg border border-slate-200">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium text-slate-900">Previous</span>
+                    <span className="text-xs text-slate-500">2 days ago</span>
+                  </div>
+                  <div className="text-xs text-slate-600">
+                    {selectedMachine} • {selectedMaterial}
+                  </div>
+                </div>
+                <div className="p-3 bg-white rounded-lg border border-slate-200">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium text-slate-900">Baseline v3</span>
+                    <span className="text-xs text-slate-500">1 week ago</span>
+                  </div>
+                  <div className="text-xs text-slate-600">
+                    {selectedMachine} • Material 2
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -762,10 +880,7 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
           </div>
         </div>
         
-        {/* Live Data Table */}
-        <div className="mt-6">
-          <LiveDataTable />
-        </div>
+        {/* Live Data Table - Removed */}
         {/* OPC UA Status */}
         {!isFallback && (
           <div className="mt-6 bg-white/90 border border-slate-200 rounded-xl p-6 shadow-sm">
