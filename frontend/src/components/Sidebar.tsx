@@ -343,28 +343,22 @@ export default function Sidebar({ isOpen = false, onClose, isCollapsed = false, 
         >
             <div className={`${isCollapsed ? "p-2" : "p-6"} h-full overflow-y-auto`}>
                 <div className="rounded-[28px] bg-white/80 border border-purple-100 shadow-[0_12px_40px_rgba(139,92,246,0.12)] backdrop-blur px-4 py-5">
-                    <div className="flex items-center justify-center px-2 pb-4">
+                    {/* Toggle Button */}
+                    <div className="flex justify-center mb-4">
                         <button
                             type="button"
-                            aria-label={isCollapsed ? "Sidebar erweitern" : "Dashboard"}
+                            aria-label={isCollapsed ? "Sidebar erweitern" : "Sidebar einklappen"}
                             onClick={onToggle}
-                            className="group flex items-center justify-center w-12 h-12 rounded-2xl bg-purple-100/70 border border-purple-200 hover:bg-purple-200/70 transition-all duration-200 flex-shrink-0"
+                            className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-purple-50 transition-colors flex-shrink-0"
                         >
-                            <NavIcon name="home" active={true} />
+                            <svg className="w-4 h-4 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                {isCollapsed ? (
+                                    <path d="M9 18l6-6-6-6" />
+                                ) : (
+                                    <path d="M15 18l-6-6 6-6" />
+                                )}
+                            </svg>
                         </button>
-                        {onClose ? (
-                            <button
-                                type="button"
-                                aria-label="Navigation schließen"
-                                onClick={onClose}
-                                className="ml-auto lg:hidden inline-flex items-center justify-center w-9 h-9 rounded-xl border border-slate-200 bg-white hover:bg-purple-50 transition-colors flex-shrink-0"
-                            >
-                                <svg className="w-4 h-4 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M18 6 6 18" />
-                                    <path d="M6 6l12 12" />
-                                </svg>
-                            </button>
-                        ) : null}
                     </div>
 
                     <nav className={`${isCollapsed ? 'space-y-2' : 'space-y-4'}`}>

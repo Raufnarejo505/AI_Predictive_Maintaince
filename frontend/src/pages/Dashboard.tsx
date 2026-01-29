@@ -23,7 +23,7 @@ export default function Dashboard() {
   const [predictionsStats, setPredictionsStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFallback, setIsFallback] = useState(false);
-  const [selectedMachine] = useState<string>('Machine 1');
+  const [selectedMachine] = useState<string>('BEX 92-28V');
   const [selectedMaterial] = useState<string>('Material 1');
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [isResetting, setIsResetting] = useState(false);
@@ -141,30 +141,6 @@ export default function Dashboard() {
       <div className="max-w-[1920px] mx-auto px-6 py-6">
         {/* Top Header Section */}
         <div className="mb-6">
-          {/* Machine and Material Selection - Static Display */}
-          <div className="bg-white/90 rounded-xl p-4 border border-slate-200 shadow-sm mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900 mb-1">Produktionskonfiguration</h2>
-                <p className="text-sm text-slate-600">Maschine und Material für die Überwachung</p>
-              </div>
-              <div className="flex gap-8">
-                <div className="min-w-[140px]">
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Maschine</label>
-                  <div className="bg-white border border-slate-300 rounded-md px-4 py-2.5 text-sm font-medium text-slate-900 whitespace-nowrap text-center">
-                    {selectedMachine}
-                  </div>
-                </div>
-                <div className="min-w-[140px]">
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Material</label>
-                  <div className="bg-white border border-slate-300 rounded-md px-4 py-2.5 text-sm font-medium text-slate-900 whitespace-nowrap text-center">
-                    {selectedMaterial}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div className="flex justify-between items-start mb-4">
             <div>
               <h1 className="text-3xl font-bold text-slate-900 mb-2">
@@ -202,6 +178,34 @@ export default function Dashboard() {
               <div>
                 <span className="text-xs text-slate-500 font-medium">SYSTEM STATUS</span>
                 <div className="text-slate-900 font-semibold">All Systems Operational</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Machine and Material Selection - Static Display */}
+        <div className="bg-white/90 rounded-xl p-4 border border-slate-200 shadow-sm mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-8">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Produktionskonfiguration</h2>
+              </div>
+              <div>
+                <p className="text-lg font-bold text-slate-900">Kunststoffwerk ZITTA GmbH</p>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+              <div className="min-w-[120px] sm:min-w-[140px]">
+                <label className="block text-xs font-medium text-slate-500 mb-1">Maschine</label>
+                <div className="bg-white border border-slate-300 rounded-md px-3 sm:px-4 py-2.5 text-sm font-medium text-slate-900 whitespace-nowrap text-center">
+                  {selectedMachine}
+                </div>
+              </div>
+              <div className="min-w-[120px] sm:min-w-[140px]">
+                <label className="block text-xs font-medium text-slate-500 mb-1">Material</label>
+                <div className="bg-white border border-slate-300 rounded-md px-3 sm:px-4 py-2.5 text-sm font-medium text-slate-900 whitespace-nowrap text-center">
+                  {selectedMaterial}
+                </div>
               </div>
             </div>
           </div>
