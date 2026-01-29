@@ -397,11 +397,22 @@ async def get_extruder_derived_kpis(
         except Exception:
             return None
 
-    # Step 2: Baseline calculation per sensor
+    # Step 2: Baseline calculation per sensor, operating-point aware
     sensor_keys = ["ScrewSpeed_rpm", "Pressure_bar", "Temp_Zone1_C", "Temp_Zone2_C", "Temp_Zone3_C", "Temp_Zone4_C"]
     baseline = {}
+    # Determine operating point by ScrewSpeed_rpm buckets (simple 2-rpm bins)
+    screw_speeds = [as_float(r.get("ScrewSpeed_rpm")) for r in rows if as_float(r.get("ScrewSpeed_rpm")) is not None]
+    if screw_speeds:
+        current_speed = screw_speeds[-1]
+        # Create bucket: round to nearest 2 rpm
+        speed_bucket = round(current_speed / 2) * 2
+        # Filter rows within this operating point (±2 rpm)
+        op_rows = [r for r in rows if as_float(r.get("ScrewSpeed_rpm")) is not None and abs(as_float(r.get("ScrewSpeed_rpm")) - speed_bucket) <= 2]
+    else:
+        op_rows = rows
+
     for key in sensor_keys:
-        values = [as_float(r.get(key)) for r in rows if as_float(r.get(key)) is not None]
+        values = [as_float(r.get(key)) for r in op_rows if as_float(r.get(key)) is not None]
         if values:
             mean_val = statistics.mean(values)
             std_val = statistics.stdev(values) if len(values) > 1 else 0.0
@@ -411,9 +422,10 @@ async def get_extruder_derived_kpis(
                 "min_normal": round(mean_val - std_val, 3),
                 "max_normal": round(mean_val + std_val, 3),
                 "count": len(values),
+                "op_bucket": speed_bucket if key == "ScrewSpeed_rpm" else None,
             }
         else:
-            baseline[key] = {"mean": None, "std": None, "min_normal": None, "max_normal": None, "count": 0}
+            baseline[key] = {"mean": None, "std": None, "min_normal": None, "max_normal": None, "count": 0, "op_bucket": None}
 
     # Step 3: Derived metrics
     derived = {}
@@ -454,6 +466,17 @@ async def get_extruder_derived_kpis(
             stability[key] = None
     derived["stability_percent"] = stability
 
+    # Per-sensor time spread (stability) within window
+    per_sensor_spread = {}
+    for key in sensor_keys:
+        vals = [as_float(r.get(key)) for r in rows if as_float(r.get(key)) is not None]
+        if len(vals) >= 2:
+            spread = max(vals) - min(vals)
+            per_sensor_spread[key] = round(spread, 3)
+        else:
+            per_sensor_spread[key] = None
+    derived["per_sensor_spread"] = per_sensor_spread
+
     # Step 4: Risk logic (green/yellow/red) per sensor
     def risk_level(value, baseline):
         if value is None or baseline.get("mean") is None:
@@ -479,6 +502,24 @@ async def get_extruder_derived_kpis(
     # Overall risk: worst sensor risk
     risk_order = {"green": 0, "yellow": 1, "red": 2, "unknown": -1}
     overall_risk = max(risk_sensors.values(), key=lambda x: risk_order.get(x, -1)) if risk_sensors else "unknown"
+
+    # Explanations per sensor
+    explanations = {}
+    for key in sensor_keys:
+        val = as_float(current_row.get(key))
+        base = baseline.get(key, {})
+        mean = base.get("mean")
+        std = base.get("std")
+        risk = risk_sensors.get(key)
+        if risk == "red":
+            explanations[key] = f"{key} critically deviates from normal ({mean:.1f}±{std:.1f})"
+        elif risk == "yellow":
+            explanations[key] = f"{key} drifting from normal ({mean:.1f}±{std:.1f})"
+        elif risk == "green":
+            explanations[key] = f"{key} stable"
+        else:
+            explanations[key] = f"{key} unknown"
+    derived["explanations"] = explanations
 
     return {
         "window_minutes": window_minutes,

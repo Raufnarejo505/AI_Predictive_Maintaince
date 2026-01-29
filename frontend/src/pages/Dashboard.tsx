@@ -396,6 +396,16 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
                   ))}
                 </div>
               )}
+              {/* Explanation */}
+              {mssqlDerived?.derived?.explanations && (
+                <div className="mt-3 text-xs text-slate-600">
+                  {Object.values(mssqlDerived.derived.explanations).find((ex: any) => ex.includes('critically') || ex.includes('drifting')) && (
+                    <div className="bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                      {Object.values(mssqlDerived.derived.explanations).find((ex: any) => ex.includes('critically') || ex.includes('drifting'))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -493,6 +503,18 @@ const MIN_FETCH_INTERVAL = 2000; // Minimum time between fetches (throttling)
                           'bg-rose-500'
                         }`} style={{width: `${pct || 0}%`}} />
                       </div>
+                      <span className="text-xs text-slate-500">{pct?.toFixed(0)}%</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {/* Per-sensor spread indicator */}
+              {mssqlDerived?.derived?.per_sensor_spread && (
+                <div className="mt-3 text-xs text-slate-600">
+                  {Object.entries(mssqlDerived.derived.per_sensor_spread).slice(0, 2).map(([key, spread]: [string, any]) => (
+                    <div key={key} className="flex justify-between py-0.5">
+                      <span>{key.replace(/_/g, ' ')}</span>
+                      <span className="font-medium">±{spread}</span>
                     </div>
                   ))}
                 </div>
